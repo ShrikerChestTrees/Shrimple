@@ -1,4 +1,4 @@
-Provided by ShrikerChestTree v12.3
+Provided by ShrikerChestTree v12.4
 
 /////PROFILE/////
 
@@ -23,28 +23,6 @@ option.SKY_TYPE=Тип Неба/Тумана
 value.SKY_TYPE.0=Ванильный
 value.SKY_TYPE.1=Кастомный
 
-=====Border Fog=====
-
-option.SKY_BORDER_FOG_ENABLED=Границы Тумана
-
-option.SKY_FOG_SHAPE=Границы Туманной Формы
-value.SKY_FOG_SHAPE.0=Обычный
-value.SKY_FOG_SHAPE.1=Сферический
-value.SKY_FOG_SHAPE.2=Цилиндрический
-
-=====Volumetric Fog=====
-
-option.SKY_VOL_FOG_TYPE=Объёмный Туман
-value.SKY_VOL_FOG_TYPE.0=Никакие
-value.SKY_VOL_FOG_TYPE.1=Быстрые
-value.SKY_VOL_FOG_TYPE.2=Детальные
-
-=====Volumetric Density=====
-
-option.SKY_FOG_DENSITY=Объёмная Плотность
-option.SKY_FOG_DENSITY.comment=Плотность объёмного тумана, используемого для объёмного освещения.
-suffix.SKY_FOG_DENSITY=%
-
 =====Weather Opacity=====
 
 option.SKY_WEATHER_OPACITY=Прозрачность Каплей
@@ -53,7 +31,7 @@ suffix.SKY_WEATHER_OPACITY=%
 
 /////BRIGHTNESS OPTIONS/////
 
-screen.SKY_BRIGHTNESS_OPTIONS=Настройка Яркости
+screen.SKY_BRIGHTNESS_OPTIONS=Настройка Яркости Неба
 
 =====Sun Brightness=====
 
@@ -69,6 +47,10 @@ suffix.SKY_MOON_BRIGHTNESS=%
 
 option.SKY_BRIGHTNESS=Яркость Неба
 suffix.SKY_BRIGHTNESS=%
+
+/////SKY COLOR OPTIONS/////
+
+screen.SKY_COLOR_OPTIONS=Настройки Цвета Неба
 
 /////CLOUD OPTIONS/////
 
@@ -103,6 +85,43 @@ value.SKY_CLOUD_ALTITUDE.0=Обычное
 
 option.SKY_CLOUD_HEIGHT=Высота Облаков
 option.SKY_CLOUD_HEIGHT.comment=Диапазон вертикальных высот объёма облаков (в блоках). Только для детальных/кубических облаков.
+
+/////FOG OPTIONS/////
+
+screen.SKY_FOG_OPTIONS=Настройки Тумана
+
+=====Volumetric Fog=====
+
+option.SKY_VOL_FOG_TYPE=Объёмный Туман
+value.SKY_VOL_FOG_TYPE.0=Никакие
+value.SKY_VOL_FOG_TYPE.1=Быстрые
+value.SKY_VOL_FOG_TYPE.2=Детальные
+
+=====Volumetric Density=====
+
+option.SKY_FOG_DENSITY=Объёмная Плотность
+option.SKY_FOG_DENSITY.comment=Плотность объёмного тумана, используемого для объёмного освещения.
+suffix.SKY_FOG_DENSITY=%
+
+=====Cave Fog=====
+
+option.SKY_CAVE_FOG_ENABLED=Пещерный Туман
+
+=====Cave Fog Density=====
+
+option.SKY_CAVE_FOG_DENSITY=Плотность Пещерного Тумана
+suffix.SKY_CAVE_FOG_DENSITY=%
+
+=====Border Fog=====
+
+option.SKY_BORDER_FOG_ENABLED=Границы Тумана
+
+=====Fog Shape=====
+
+option.SKY_FOG_SHAPE=Границы Туманной Формы
+value.SKY_FOG_SHAPE.0=Обычный
+value.SKY_FOG_SHAPE.1=Сферический
+value.SKY_FOG_SHAPE.2=Цилиндрический
 
 #####WORLD OPTIONS#####
 
@@ -147,11 +166,13 @@ option.WORLD_SKY_REFLECTIONS=Отражение Неба
 option.WORLD_SKY_REFLECTIONS.comment=Позволяет отражать небо, если включены спекулярные материалы/отражающие материалы.
 suffix.WORLD_SKY_REFLECTIONS=%
 
-=====Smoke=====
+=====Nether Smoke=====
 
-option.WORLD_NETHER_SMOKE=Дым Незера/Энда 
+option.WORLD_NETHER_SMOKE=Дым Незера
 
-option.WORLD_END_SMOKE=Дым Незера/Энда 
+=====End Smoke=====
+
+option.WORLD_END_SMOKE=Дым Энда 
 
 =====Nether Ambient=====
 
@@ -203,15 +224,6 @@ value.WATER_WAVE_SIZE.3=Большие
 option.WATER_WAVE_DETAIL=Детальность Волн
 suffix.WATER_WAVE_DETAIL=x
 
-=====Water Surface Pixel=====
-
-option.WATER_SURFACE_PIXEL_RES=Пиксельная
-value.WATER_SURFACE_PIXEL_RES.0=Выкл
-value.WATER_SURFACE_PIXEL_RES.8=8x (пикс.)
-value.WATER_SURFACE_PIXEL_RES.16=16x (пикс.)
-value.WATER_SURFACE_PIXEL_RES.32=32x (пикс.)
-value.WATER_SURFACE_PIXEL_RES.64=64x (пикс.)
-value.WATER_SURFACE_PIXEL_RES.128=128x (пикс.)
 
 =====Water Volumetric Fog Type=====
 
@@ -225,6 +237,27 @@ value.WATER_VOL_FOG_TYPE.2=Детальный
 option.WATER_FOG_DENSITY=Плотность Тумана
 suffix.WATER_FOG_DENSITY=%
 
+=====Water Depth Layers=====
+
+option.WATER_DEPTH_LAYERS=Плотность Слоёв
+
+/////WATER WAVES OPTIONS/////
+
+screen.WATER_WAVE_OPTIONS=Настройка Волн Воды
+
+=====Water Wave Size=====
+
+option.WATER_WAVE_SIZE=Размер
+value.WATER_WAVE_SIZE.0=Никакой
+value.WATER_WAVE_SIZE.1=Маленький
+value.WATER_WAVE_SIZE.2=Средний
+value.WATER_WAVE_SIZE.3=Большой
+
+=====Water Wave Detail=====
+
+option.WATER_WAVE_DETAIL=Детальность
+suffix.WATER_WAVE_DETAIL=x
+
 =====Water Caustics=====
 
 option.WATER_CAUSTICS=Тень/Свет Воды
@@ -234,9 +267,11 @@ option.WATER_CAUSTICS=Тень/Свет Воды
 option.WATER_TESSELLATION_QUALITY=Качество Тесселяции
 value.WATER_TESSELLATION_QUALITY.0=Выкл
 
-=====Water Depth Layers=====
+=====Water Surface Pixelated=====
 
-option.WATER_DEPTH_LAYERS=Плотность Слоёв
+option.WATER_SURFACE_PIXEL_RES=Пиксельный
+value.WATER_SURFACE_PIXEL_RES.0=Выкл
+suffix.WATER_SURFACE_PIXEL_RES=x
 
 #####MATERIAL OPTIONS#####
 
@@ -606,6 +641,11 @@ suffix.LPV_LIGHTMAP_MIX=%
 option.LPV_SHADOW_SAMPLES=Образцы Теней
 option.LPV_SHADOW_SAMPLES.comment=Сколько образцов использовать на блок при определении видимости солнца/луны (GI).
 value.LPV_SHADOW_SAMPLES.0=Выкл
+
+=====LPV GI=====
+
+option.LPV_GI=Глобальное Освещение
+option.LPV_GI.comment=Позволяет солнце/луне отражать свет цветного освещения на близлежащие поверхности. Требуется, чтобы параметр "Образцы Теней" был выше нуля.
 
 =====LPV Voxel Test=====
 
@@ -1193,8 +1233,6 @@ option.WATER_MULTIDEPTH_DEBUG=ОТЛАДКА_МНОГОГЛУБОКОЙ_ВОДЫ
 
 /////SKY COLOR OPTIONS/////
 
-screen.SKY_COLOR_OPTIONS=НАСТРОЙКИ_ЦВЕТА_НЕБА
-
 =====Sky Light Color Day=====
 
 option.SKY_LIGHT_COLOR_DAY_R=ЦВЕТ_СВЕТА_НЕБА_ДНЁМ_R
@@ -1212,7 +1250,3 @@ option.SKY_LIGHT_COLOR_HORIZON_B=ИСХОДНЫЙ_ЦВЕТ_СВЕТА_НЕБА_B
 option.SKY_LIGHT_COLOR_NIGHT_R=ЦВЕТ_СВЕТА_НЕБА_НОЧЬЮ_R
 option.SKY_LIGHT_COLOR_NIGHT_G=ЦВЕТ_СВЕТА_НЕБА_НОЧЬЮ_G
 option.SKY_LIGHT_COLOR_NIGHT_B=ЦВЕТ_СВЕТА_НЕБА_НОЧЬЮ_B
-
-=====LPV GI=====
-
-option.LPV_GI=ОНЗ ГО
