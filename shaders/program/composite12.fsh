@@ -27,7 +27,7 @@ uniform sampler2D TEX_LIGHTMAP;
     uniform sampler2D BUFFER_BLOCK_SPECULAR;
 #endif
 
-#if defined IRIS_FEATURE_SSBO && LPV_SIZE > 0 && (LIGHTING_MODE != LIGHTING_MODE_NONE || LPV_SHADOW_SAMPLES > 0)
+#if defined IS_LPV_ENABLED && (LIGHTING_MODE != LIGHTING_MODE_NONE || defined IS_LPV_SKYLIGHT_ENABLED)
     uniform sampler3D texLPV_1;
     uniform sampler3D texLPV_2;
 #endif
@@ -240,7 +240,7 @@ uniform int heldBlockLightValue2;
     #include "/lib/lighting/voxel/lights_render.glsl"
 #endif
 
-#if defined IRIS_FEATURE_SSBO && LPV_SIZE > 0 && (LIGHTING_MODE > LIGHTING_MODE_BASIC || LPV_SHADOW_SAMPLES > 0)
+#if defined IS_LPV_ENABLED && (LIGHTING_MODE > LIGHTING_MODE_BASIC || defined IS_LPV_SKYLIGHT_ENABLED)
     #include "/lib/buffers/volume.glsl"
     #include "/lib/utility/hsv.glsl"
     
@@ -619,13 +619,17 @@ layout(location = 0) out vec4 outFinal;
                                 const float phaseSky = phaseIso;
                             #endif
 
-                            vec3 vlLight = (phaseSky + AirAmbientF) * skyLightColor;
+                            #if SKY_TYPE == SKY_TYPE_CUSTOM
+                                vec3 skyColorFinal = GetCustomSkyColor(localSunDirection.y, 1.0) * WorldSkyBrightnessF;// * eyeBrightF;
+                            #else
+                                vec3 skyColorFinal = GetVanillaFogColor(fogColor, 1.0);
+                                skyColorFinal = RGBToLinear(skyColorFinal);// * eyeBrightF;
+                            #endif
+
+                            vec3 vlLight = phaseSky * skyLightColor + AirAmbientF * skyColorFinal;
                             float airDensity = GetSkyDensity(worldPos.y);
 
-                            vec3 scatterFinal = vec3(0.0);
-                            vec3 transmitFinal = vec3(1.0);
-                            ApplyScatteringTransmission(scatterFinal, transmitFinal, fogFarDist, vlLight, airDensity, AirScatterColor, AirExtinctColor, 8);
-                            fogColorFinal = fogColorFinal * transmitFinal + scatterFinal;
+                            ApplyScatteringTransmission(fogColorFinal, fogFarDist, vlLight, airDensity, AirScatterColor, AirExtinctColor, 16);
                         }
                     #endif
                 #elif SKY_TYPE == SKY_TYPE_VANILLA

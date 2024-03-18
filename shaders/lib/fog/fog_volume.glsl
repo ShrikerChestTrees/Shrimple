@@ -1,3 +1,6 @@
+const float vlSkyMinLight = 0.08;
+
+
 float GetWaterPhase(const in float VoL) {return DHG(VoL, -0.12, 0.68, 0.24);}
 
 void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, const in vec3 localViewDir, const in float nearDist, const in float farDist, const in float distTrans, in bool isWater) {
@@ -143,7 +146,7 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
             float traceAltitude = traceWorldPos.y;
         #endif
 
-        #if LPV_SIZE > 0 && (LIGHTING_MODE > LIGHTING_MODE_BASIC || LPV_SHADOW_SAMPLES > 0)
+        #if defined IS_LPV_ENABLED && (LIGHTING_MODE > LIGHTING_MODE_BASIC || defined IS_LPV_SKYLIGHT_ENABLED)
             vec3 lpvPos = GetLPVPosition(traceLocalPos);
             vec4 lpvSample = SampleLpv(lpvPos);
             float lpvFade = GetLpvFade(lpvPos);
@@ -384,14 +387,14 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
 
                     blockLightAccum *= 32.0 * DynamicLightBrightness;
                 }
-            #elif LPV_SIZE > 0 && (LIGHTING_MODE > LIGHTING_MODE_BASIC || LPV_SHADOW_SAMPLES > 0)
+            #elif defined IS_LPV_ENABLED && (LIGHTING_MODE > LIGHTING_MODE_BASIC || defined IS_LPV_SKYLIGHT_ENABLED)
                 vec3 lpvLight = vec3(0.0);
 
-                #if defined LPV_GI && LPV_SHADOW_SAMPLES > 0
+                #if defined LPV_GI && defined IS_LPV_SKYLIGHT_ENABLED
                     if (!isWater) {
                 #endif
                     lpvLight = 2.0 * GetLpvBlockLight(lpvSample);
-                #if defined LPV_GI && LPV_SHADOW_SAMPLES > 0
+                #if defined LPV_GI && defined IS_LPV_SKYLIGHT_ENABLED
                     }
                 #endif
 
@@ -402,7 +405,7 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
         #endif
 
         #ifdef WORLD_SKY_ENABLED
-            sampleAmbient *= skyColorFinal + 0.014;
+            sampleAmbient *= skyColorFinal + vlSkyMinLight;
         #endif
 
         vec3 lightF = sampleLit + sampleAmbient;
