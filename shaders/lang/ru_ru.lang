@@ -1,4 +1,4 @@
-Provided by ShrikerChestTree v12.4
+Provided by ShrikerChestTree v13.0
 
 /////PROFILE/////
 
@@ -138,9 +138,10 @@ option.WORLD_WETNESS_ENABLED.comment=Приводит к тому, что мок
 option.WORLD_WETNESS_PUDDLES=Лужи
 option.WORLD_WETNESS_PUDDLES.comment=При дожде воздействует на материалы/блоки.
 value.WORLD_WETNESS_PUDDLES.0=Выкл
-value.WORLD_WETNESS_PUDDLES.1=Обычная
-value.WORLD_WETNESS_PUDDLES.2=Пиксельная
-value.WORLD_WETNESS_PUDDLES.3=Детальная
+value.WORLD_WETNESS_PUDDLES.1=Обычные
+value.WORLD_WETNESS_PUDDLES.2=Пиксельные
+value.WORLD_WETNESS_PUDDLES.3=Детальные
+value.WORLD_WETNESS_PUDDLES.4=Полностью
 
 =====Waving=====
 
@@ -860,11 +861,13 @@ value.SHADOW_TYPE.3=Контактный
 
 option.shadowMapResolution=Разрешение
 option.shadowMapResolution.comment=Разрешение отображения теней. Более высокие значения показывают более точные тени.
+suffix.shadowMapResolution=x
 
 =====Shadow Distance=====
 
 option.shadowDistance=Расстояние
-option.shadowDistance.comment=На каком расстоянии будут отрисовываться тени.
+option.shadowDistance.comment=На каком расстоянии будут отрисовываться тени, в блоках/метрах.
+suffix.shadowDistance=м
 
 =====Shadow Colored=====
 
@@ -875,18 +878,6 @@ option.SHADOW_COLORED.comment=Является ли солнечный/лунн�
 
 option.SHADOW_COLOR_BLEND=Наложение Цветов
 option.SHADOW_COLOR_BLEND.comment=Позволяет цветным теням наложить несколько цветов. На данный момент эта функция не работает, пока в Sodium не появится поддержка полупрозрачной сортировки.
-
-=====Shadow Bias Scale=====
-
-option.SHADOW_BIAS_SCALE=Шкала Погрешности
-option.SHADOW_BIAS_SCALE.comment=Увеличьте этот параметр, если вы получаете теневые acne. Уменьшите этот показатель, если у вас появится peter panning.
-suffix.SHADOW_BIAS_SCALE=%
-
-=====Shadow Distort Factor=====
-
-option.SHADOW_DISTORT_FACTOR=Искажённый
-option.SHADOW_DISTORT_FACTOR.comment=Величина искажения, применяемая к теням. Применяется только к искажённым теням.
-suffix.SHADOW_DISTORT_FACTOR=%
 
 =====Shadow Cloud Enabled=====
 
@@ -905,6 +896,35 @@ option.SHADOW_FILTER.comment=Тип фильтрации для применен
 value.SHADOW_FILTER.0=Никакой
 value.SHADOW_FILTER.1=Мягко-Фиксированный
 value.SHADOW_FILTER.2=Мягко-Динамический
+
+=====Light Leak Fix=====
+
+option.LIGHT_LEAK_FIX=Исправление Световой-Дыры
+option.LIGHT_LEAK_FIX.comment=Предотвращает световую-дыру в пещерах и в других темных местах, заставляя участки с нулевым освещением-неба полностью затенять.
+
+/////SHADOW_ADCANCED_OPTIONS/////
+
+screen.SHADOW_ADVANCED_OPTIONS=Дополнительная Настройка Теней
+
+=====Shadow Bias Scale=====
+
+option.SHADOW_BIAS_SCALE=Шкала Погрешности
+option.SHADOW_BIAS_SCALE.comment=Увеличьте этот параметр, если вы получаете теневые acne. Уменьшите этот показатель, если у вас появится peter panning.
+suffix.SHADOW_BIAS_SCALE=%
+
+=====Shadow Distort Factor=====
+
+option.SHADOW_DISTORT_FACTOR=Искажённый
+option.SHADOW_DISTORT_FACTOR.comment=Величина искажения, применяемая к теням. Применяется только к искажённым теням.
+suffix.SHADOW_DISTORT_FACTOR=%
+
+=====Shadow Screen-Space=====
+
+option.SHADOW_SCREEN=В Пространстве-Экрана
+
+=====Shadow Screen-Space Steps=====
+
+option.SHADOW_SCREEN_STEPS=В Пространстве-Экрана Шаги
 
 =====Shadow Enable HWCOMP=====
 
@@ -935,7 +955,7 @@ option.SHADOW_PCSS_SAMPLES.comment=Количество образцов, исп
 
 =====Shadow Blur Size=====
 
-option.SHADOW_BLUR_SIZE=Сглаживание
+option.SHADOW_BLUR_SIZE=Фильтр Размытия
 option.SHADOW_BLUR_SIZE.comment=Применяет пост гауссовое размытие к буферу затенения для дополнительного сглаживания размытия. Применяется ко всем типам теней.
 value.SHADOW_BLUR_SIZE.0=Выкл
 value.SHADOW_BLUR_SIZE.1=3x3
@@ -1126,6 +1146,11 @@ value.POST_TONEMAP.2=ACES
 value.POST_TONEMAP.3=Heijl
 value.POST_TONEMAP.4=Lottes
 
+=====Post Temperature=====
+
+option.POST_TEMP=Температура
+suffix.POST_TEMP=00°k
+
 =====Post White Point=====
 
 option.POST_WHITE_POINT=Белая-Точка
@@ -1222,10 +1247,6 @@ option.LIGHT_COLOR_SEA_PICKLE=Морские Огурцы
 option.LIGHT_COLOR_SHROOMLIGHT=Грибосвет
 
 #####OTHER#####
-
-=====Light Leak Fix=====
-
-option.LIGHT_LEAK_FIX=ИСПРАВЛЕНИЕ_СВЕТОВОЙ_ДЫРЫ
 
 =====Water Multidepth Debug=====
 
