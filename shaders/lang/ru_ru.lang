@@ -1,15 +1,15 @@
-Provided by ShrikerChestTree v13.0
+Provided by ShrikerChestTree v13.1
 
 /////PROFILE/////
 
 profile.VANILLA=Ванилла
 profile.SHADOWS=Тени
 profile.LIGHTS=Цветное Освещение
-profile.RTX=Трассировка Лучей
+profile.RTX=Трассировка Лучей X
 
 #####SKY OPTIONS#####
 
-screen.SKY_OPTIONS=Настройки Неба
+screen.SKY_OPTIONS=Настройка Неба
 
 =====Sun Path Rotation=====
 
@@ -50,11 +50,11 @@ suffix.SKY_BRIGHTNESS=%
 
 /////SKY COLOR OPTIONS/////
 
-screen.SKY_COLOR_OPTIONS=Настройки Цвета Неба
+screen.SKY_COLOR_OPTIONS=Настройка Цвета Неба
 
 /////CLOUD OPTIONS/////
 
-screen.SKY_CLOUD_OPTIONS=Настройка Облака
+screen.SKY_CLOUD_OPTIONS=Настройка Облаков
 
 =====Cloud Type=====
 
@@ -88,14 +88,14 @@ option.SKY_CLOUD_HEIGHT.comment=Диапазон вертикальных выс
 
 /////FOG OPTIONS/////
 
-screen.SKY_FOG_OPTIONS=Настройки Тумана
+screen.SKY_FOG_OPTIONS=Настройка Тумана
 
 =====Volumetric Fog=====
 
 option.SKY_VOL_FOG_TYPE=Объёмный Туман
-value.SKY_VOL_FOG_TYPE.0=Никакие
-value.SKY_VOL_FOG_TYPE.1=Быстрые
-value.SKY_VOL_FOG_TYPE.2=Детальные
+value.SKY_VOL_FOG_TYPE.0=Никакой
+value.SKY_VOL_FOG_TYPE.1=Быстрый
+value.SKY_VOL_FOG_TYPE.2=Детальный
 
 =====Volumetric Density=====
 
@@ -125,8 +125,8 @@ value.SKY_FOG_SHAPE.2=Цилиндрический
 
 #####WORLD OPTIONS#####
 
-screen.WORLD_OPTIONS=Настройки Мира
-screen.WORLD_OPTIONS.comment=Настройки для всего остального.
+screen.WORLD_OPTIONS=Настройка Мира
+screen.WORLD_OPTIONS.comment=Настройка для всего остального.
 
 =====Wetness=====
 
@@ -197,13 +197,13 @@ value.WORLD_CURVE_RADIUS.0=ПЛОСКИЙ
 
 #####WATER OPTIONS#####
 
-screen.WATER_OPTIONS=Настройки Воды
-screen.WATER_OPTIONS.comment=Настройки для воды.
+screen.WATER_OPTIONS=Настройка Воды
+screen.WATER_OPTIONS.comment=Настройка для воды.
 
 =====Color=====
 
 option.WATER_COLOR_TYPE=Цвет
-value.WATER_COLOR_TYPE.0=Автоматически
+value.WATER_COLOR_TYPE.0=Автоматический
 value.WATER_COLOR_TYPE.1=Обычный
 value.WATER_COLOR_TYPE.2=Тропический
 value.WATER_COLOR_TYPE.3=Болотный
@@ -276,7 +276,7 @@ suffix.WATER_SURFACE_PIXEL_RES=x
 
 #####MATERIAL OPTIONS#####
 
-screen.MATERIAL_OPTIONS=Настройки Материалов (Normal map, PBR...)
+screen.MATERIAL_OPTIONS=Настройка Материалов (Normal map, PBR...)
 
 =====Normal Map=====
 
@@ -328,7 +328,7 @@ value.MATERIAL_SSS.2=Lab-PBR
 
 /////PARALLAX OPTIONS/////
 
-screen.MATERIAL_PARALLAX_OPTIONS=Настройки Вытеснения
+screen.MATERIAL_PARALLAX_OPTIONS=Настройка Вытеснения
 screen.MATERIAL_PARALLAX_OPTIONS.comment=Как смещается глубина каждого пикселя поверхности (POM).
 
 =====Parallax Mode=====
@@ -367,7 +367,7 @@ option.MATERIAL_PARALLAX_SAMPLES=POM-ые Образцы
 =====Parallax Shadow Samples=====
 
 option.MATERIAL_PARALLAX_SHADOW_SAMPLES=POM-ые Теневые Образцы
-value.MATERIAL_PARALLAX_SHADOW_SAMPLES.0=Выкл.
+value.MATERIAL_PARALLAX_SHADOW_SAMPLES.0=Выкл
 
 =====Parallax Maximum Distance=====
 
@@ -376,13 +376,13 @@ option.MATERIAL_DISPLACE_MAX_DIST.comment=Максимальное рассто�
 
 =====Parallax Sharp Threshold=====
 
-option.MATERIAL_PARALLAX_SHARP_THRESHOLD=Острые POM Пороги
+option.MATERIAL_PARALLAX_SHARP_THRESHOLD=Острые Пороги POM
 option.MATERIAL_PARALLAX_SHARP_THRESHOLD.comment=Порог, при котором острый параллакс применяется к наклонным нормалям. [N / 255]
 suffix.MATERIAL_PARALLAX_SHARP_THRESHOLD=/255
 
 =====Parallax Shadow Smooth=====
 
-option.MATERIAL_PARALLAX_SHADOW_SMOOTH=Гладкие POM Тени
+option.MATERIAL_PARALLAX_SHADOW_SMOOTH=Гладкие Тени POM
 option.MATERIAL_PARALLAX_SHADOW_SMOOTH.comment=Включает более высокое качество теней при включении плавного POM.
 
 =====Parallax Depth Write=====
@@ -392,7 +392,7 @@ option.MATERIAL_PARALLAX_DEPTH_WRITE=Глубина-Записи POM-а
 =====Parallax Entities=====
 
 option.MATERIAL_DISPLACE_ENTITIES=Мобы
-option.MATERIAL_DISPLACE_ENTITIES.comment=Отключите параллакс для мобов, если он вызывает проблемы с рендерингом в некоторых модах.
+option.MATERIAL_DISPLACE_ENTITIES.comment=Отключите параллакс для мобов, если он вызывает проблемы с рендером в некоторых модах.
 
 /////NORMAL MAP OPTIONS/////
 
@@ -403,7 +403,7 @@ screen.MATERIAL_NORMAL_OPTIONS.comment=Как каждый пиксель пов
 
 option.MATERIAL_NORMAL_SCALE=Разрешение
 option.MATERIAL_NORMAL_SCALE.comment=Масштаб текстуры, при котором генерируются нормали. Применяется только для интегрированных отображенний нормалей.
-suffix.MATERIAL_NORMAL_SCALE=x (пикс.)
+suffix.MATERIAL_NORMAL_SCALE=x (пикс)
 
 =====Normal Strenght=====
 
@@ -427,7 +427,7 @@ value.MATERIAL_NORMAL_ROUND.0=Выкл
 
 /////SPECULAR OPTIONS/////
 
-screen.MATERIAL_SPECULAR_OPTIONS=Настройки Отображения Спекуляра (Отражение)
+screen.MATERIAL_SPECULAR_OPTIONS=Настройка Отображения Спекуляра (Отражение)
 
 =====Brightness=====
 
@@ -441,7 +441,7 @@ option.MATERIAL_HCM_ALBEDO_TINT.comment=Альбедовская тониров�
 
 /////POROSITY OPTIONS/////
 
-screen.MATERIAL_POROSITY_OPTIONS=Настройки Пористости
+screen.MATERIAL_POROSITY_OPTIONS=Настройка Пористости
 screen.MATERIAL_POROSITY_OPTIONS.comment=Какое количество воды поглощается каждым пикселем поверхности.
 
 =====Porosity Darken=====
@@ -461,7 +461,7 @@ suffix.MATERIAL_EMISSION_BRIGHTNESS=%
 
 /////SSS OPTIONS/////
 
-screen.MATERIAL_SSS_OPTIONS=Настройки ПР
+screen.MATERIAL_SSS_OPTIONS=Настройка ПР
 
 =====SSS Strenght=====
 
@@ -480,14 +480,14 @@ option.MATERIAL_SSS_MAXDIST.comment=Максимальная дистанция 
 
 /////REFLECT OPTIONS/////
 
-screen.MATERIAL_REFLECT_OPTIONS=Настройки Отражения
+screen.MATERIAL_REFLECT_OPTIONS=Настройка Отражения
 
 =====Reflections=====
 
 option.MATERIAL_REFLECTIONS=Отражение
-value.MATERIAL_REFLECTIONS.0=Никакое
-value.MATERIAL_REFLECTIONS.1=С небом
-value.MATERIAL_REFLECTIONS.2=В пространстве экрана
+value.MATERIAL_REFLECTIONS.0=Никакие
+value.MATERIAL_REFLECTIONS.1=С Небом
+value.MATERIAL_REFLECTIONS.2=В Пространстве-Экрана
 
 =====Reflections Strenght=====
 
@@ -521,7 +521,7 @@ option.MATERIAL_REFLECT_GLASS.comment=Позволять обычному сте
 
 /////REFRACTIONS OPTIONS/////
 
-screen.MATERIAL_REFRACT_OPTIONS=Настройки Преломления
+screen.MATERIAL_REFRACT_OPTIONS=Настройка Преломления
 
 =====Refractions Enabled=====
 
@@ -548,7 +548,7 @@ screen.LIGHTING_OPTIONS=Настройка Освещения
 
 option.LIGHTING_MODE=Режим
 option.LIGHTING_MODE.comment=Как рассчитывается освещение. СветоваяКарта (Обычный) использует ванильное освещение. НаливноеЗаполнение (ОНЗ,ОНЗ ГО/LPV,LPV GI) позволяет использовать базовое цветное освещение. Включите трассировку лучей для теней от блочного света.
-value.LIGHTING_MODE.0=Ванилла
+value.LIGHTING_MODE.0=Ванильный
 value.LIGHTING_MODE.1=Обычный
 value.LIGHTING_MODE.2=Наливное Заполнение (LPV/LPV GI)
 value.LIGHTING_MODE.3=Трассировка лучей
@@ -556,8 +556,8 @@ value.LIGHTING_MODE.3=Трассировка лучей
 =====Lighting Mode Hand=====
 
 option.LIGHTING_MODE_HAND=Рука
-value.LIGHTING_MODE_HAND.0=Никакое
-value.LIGHTING_MODE_HAND.1=Простой
+value.LIGHTING_MODE_HAND.0=Никакая
+value.LIGHTING_MODE_HAND.1=Простая
 value.LIGHTING_MODE_HAND.2=Трассировка-Лучей
 
 =====Lighting Minimum=====
@@ -590,7 +590,7 @@ suffix.LIGHTING_TEMP=°k
 
 /////LIGHTMAP OPTIONS/////
 
-screen.LIGHTING_LIGHTMAP_OPTIONS=Настройки СветовойКарты (Обычный)
+screen.LIGHTING_LIGHTMAP_OPTIONS=Настройка СветовойКарты (Обычный)
 
 =====Directional LightMap=====
 
@@ -604,7 +604,7 @@ option.LIGHTING_OLD.comment=Ванильное направлённое небе
 
 /////LPV OPTIONS/////
 
-screen.LIGHTING_LPV_OPTIONS=Настройки НаливногоЗаполнения
+screen.LIGHTING_LPV_OPTIONS=Настройка НаливногоЗаполнения
 
 =====LPV Size=====
 
@@ -617,9 +617,9 @@ value.LPV_SIZE.3=Большая
 =====LPV Sample Mode=====
 
 option.LPV_SAMPLE_MODE=Режим Образца
-value.LPV_SAMPLE_MODE.0=Точечная
-value.LPV_SAMPLE_MODE.1=Линейная
-value.LPV_SAMPLE_MODE.2=Воксельная-Тестовая
+value.LPV_SAMPLE_MODE.0=Точечные
+value.LPV_SAMPLE_MODE.1=Линейные
+value.LPV_SAMPLE_MODE.2=Воксельно-Тестовые
 
 =====LPV Bright Block=====
 
@@ -655,7 +655,7 @@ option.LPV_VOXEL_TEST.comment=Линейная и кубическая выбо�
 
 /////RAY TRACING OPTIONS/////
 
-screen.LIGHTING_TRACE_OPTIONS=Настройки Трассировки лучей
+screen.LIGHTING_TRACE_OPTIONS=Настройка Трассировки лучей
 
 =====Lighting Ray Tracing Resolution=====
 
@@ -674,9 +674,9 @@ suffix.LIGHTING_TRACE_PENUMBRA=%
 =====Lighting Tint Mode=====
 
 option.LIGHTING_TINT_MODE=Режим Тонировки
-value.LIGHTING_TINT_MODE.0=Никакое
-value.LIGHTING_TINT_MODE.1=Обычное
-value.LIGHTING_TINT_MODE.2=Абсорбское
+value.LIGHTING_TINT_MODE.0=Никакая
+value.LIGHTING_TINT_MODE.1=Обычная
+value.LIGHTING_TINT_MODE.2=Абсорбская
 
 =====Lighting Tint Strenght=====
 
@@ -688,9 +688,9 @@ value.LIGHTING_TINT_STRENGTH.0=Выкл
 =====Lighting Ray Traced Player Shadow=====
 
 option.LIGHTING_TRACED_PLAYER_SHADOW=Тень Игрока
-value.LIGHTING_TRACED_PLAYER_SHADOW.0=Никакое
-value.LIGHTING_TRACED_PLAYER_SHADOW.1=Кубическое
-value.LIGHTING_TRACED_PLAYER_SHADOW.2=Цилиндрическое
+value.LIGHTING_TRACED_PLAYER_SHADOW.0=Никакие
+value.LIGHTING_TRACED_PLAYER_SHADOW.1=Кубические
+value.LIGHTING_TRACED_PLAYER_SHADOW.2=Цилиндрические
 
 =====Lighting Flicker=====
 
@@ -705,45 +705,45 @@ screen.LIGHTING_TRACE_BLOCK_OPTIONS=Настройка Освещения Бло
 
 option.DYN_LIGHT_GLOW_BERRIES=Освещение Светящиеся Ягоды
 option.DYN_LIGHT_GLOW_BERRIES.comment=Как обрабатывается освещение для светящиеся ягоды, чтобы избежать сильного влияния на производительность в пышном биоме.
-value.DYN_LIGHT_GLOW_BERRIES.0=Выключен
-value.DYN_LIGHT_GLOW_BERRIES.1=Излучаемый
-value.DYN_LIGHT_GLOW_BERRIES.2=Трассировачный
+value.DYN_LIGHT_GLOW_BERRIES.0=Выключенные
+value.DYN_LIGHT_GLOW_BERRIES.1=Излучаемые
+value.DYN_LIGHT_GLOW_BERRIES.2=Трассировачные
 
 =====Dynamic Light Lava=====
 
 option.DYN_LIGHT_LAVA=Освещение Лавы
 option.DYN_LIGHT_LAVA.comment=Как будет обрабатываться освещение для лавы, чтобы избежать сильного влияния на производительность при больших озёр/источников лавы.
-value.DYN_LIGHT_LAVA.0=Выключен
-value.DYN_LIGHT_LAVA.1=Излучаемый
-value.DYN_LIGHT_LAVA.2=Трассировачный
+value.DYN_LIGHT_LAVA.0=Выключенные
+value.DYN_LIGHT_LAVA.1=Излучаемые
+value.DYN_LIGHT_LAVA.2=Трассировачные
 
 =====Dynamic Light Portal=====
 
 option.DYN_LIGHT_PORTAL=Освещение Портала в Незер
 option.DYN_LIGHT_PORTAL.comment=Как обрабатывается освещение для порталов в незер, чтобы избежать сильного влияния на производительность больших порталов.
-value.DYN_LIGHT_PORTAL.0=Выключен
-value.DYN_LIGHT_PORTAL.1=Излучаемый
-value.DYN_LIGHT_PORTAL.2=Трассировачный
+value.DYN_LIGHT_PORTAL.0=Выключенные
+value.DYN_LIGHT_PORTAL.1=Излучаемые
+value.DYN_LIGHT_PORTAL.2=Трассировачные
 
 =====Dynamic Light Redstone=====
 
 option.DYN_LIGHT_REDSTONE=Освещение редстоуна/Редстоуновой руды
 option.DYN_LIGHT_REDSTONE.comment=Как будет обрабатываться освещение для редстоуна, чтобы избежать сильного влияния на производительность при больших конструкций.
-value.DYN_LIGHT_REDSTONE.0=Выключен
-value.DYN_LIGHT_REDSTONE.1=Излучаемый
-value.DYN_LIGHT_REDSTONE.2=Трассировачный
+value.DYN_LIGHT_REDSTONE.0=Выключенные
+value.DYN_LIGHT_REDSTONE.1=Излучаемые
+value.DYN_LIGHT_REDSTONE.2=Трассировачные
 
 =====Dynamic Light Sea Pickle=====
 
 option.DYN_LIGHT_SEA_PICKLE=Освещение Морских Огурцов
 option.DYN_LIGHT_SEA_PICKLE.comment=Как обрабатывается освещение для морских огурцов, чтобы избежать сильного влияния на производительность в больших караловых рифов.
-value.DYN_LIGHT_SEA_PICKLE.0=Выключен
-value.DYN_LIGHT_SEA_PICKLE.1=Излучаемый
-value.DYN_LIGHT_SEA_PICKLE.2=Трассировачный
+value.DYN_LIGHT_SEA_PICKLE.0=Выключенные
+value.DYN_LIGHT_SEA_PICKLE.1=Излучаемые
+value.DYN_LIGHT_SEA_PICKLE.2=Трассировачные
 
 /////ADVANCED OPTIONS/////
 
-screen.LIGHTING_TRACE_ADVANCED_OPTIONS=Расширенный
+screen.LIGHTING_TRACE_ADVANCED_OPTIONS=Расширенные Настройки
 
 =====Lighting Bin Size=====
 
@@ -773,7 +773,7 @@ suffix.LIGHTING_RANGE=%
 
 option.LIGHTING_TRACE_SAMPLE_MAX=Максимальное Количество Образцов
 option.LIGHTING_TRACE_SAMPLE_MAX.comment=Максимальное количество источников света, которое может быть образцовано на пиксель для каждого рендерного кадра. Установка меньшего значения увеличивает производительность, но также увеличивает временное размытие.
-value.LIGHTING_TRACE_SAMPLE_MAX.0=Бесконечное
+value.LIGHTING_TRACE_SAMPLE_MAX.0=Бесконечные
 
 =====Lighting Ray Tracing Filter=====
 
@@ -790,7 +790,7 @@ option.DYN_LIGHT_WEATHER.comment=Будет ли применяться дина
 
 #####VOLIMETRIC OPTIONS#####
 
-screen.VOLUMETRIC_OPTIONS=Настройки Объёмного тумана
+screen.VOLUMETRIC_OPTIONS=Настройка Объёмного тумана
 
 =====Volumetric Resolution=====
 
@@ -821,7 +821,7 @@ value.VOLUMETRIC_BRIGHT_BLOCK.0=Выкл
 
 option.VOLUMETRIC_BLOCK_MODE=Объёмный Свет Блока
 option.VOLUMETRIC_BLOCK_MODE.comment=Будет ли применяться объёмное освещение к туману для динамического освещения на основе блоков.
-value.VOLUMETRIC_BLOCK_MODE.0=Выключен
+value.VOLUMETRIC_BLOCK_MODE.0=Выключенный
 value.VOLUMETRIC_BLOCK_MODE.1=Излучаемый
 value.VOLUMETRIC_BLOCK_MODE.2=Трассировачный [Простой]
 value.VOLUMETRIC_BLOCK_MODE.3=Трассировачный [Полный]
@@ -842,7 +842,7 @@ option.VOLUMETRIC_BLOCK_RT.comment=Включает объёмную трасс�
 #####SHADOW OPTIONS#####
 
 screen.SHADOW_OPTIONS=Настройка Тени
-screen.SHADOW_OPTIONS.comment=Настройки для теней.
+screen.SHADOW_OPTIONS.comment=Настройка для теней.
 
 =====Shadow=====
 
@@ -853,9 +853,9 @@ option.SHADOW_ENABLED.comment=Тени от солнца и луны.
 
 option.SHADOW_TYPE=Тип
 option.SHADOW_TYPE.comment=Тип используемого теневого отображения.
-value.SHADOW_TYPE.0=Никакое
-value.SHADOW_TYPE.2=Искажённый
-value.SHADOW_TYPE.3=Контактный
+value.SHADOW_TYPE.0=Никакие
+value.SHADOW_TYPE.2=Искажённые
+value.SHADOW_TYPE.3=Контактные
 
 =====ShadowMap Resolution=====
 
@@ -886,21 +886,21 @@ option.SHADOW_CLOUD_ENABLED.comment=Включает тени от облако�
 
 /////SHADOW FILTER OPTIONS/////
 
-screen.SHADOW_FILTER_OPTIONS=Настройки Фильтра
-screen.SHADOW_FILTER_OPTIONS.comment=Настройки фильтрации теней.
+screen.SHADOW_FILTER_OPTIONS=Настройка Фильтра
+screen.SHADOW_FILTER_OPTIONS.comment=Настройка фильтрации теней.
 
 =====Shadow Filter=====
 
 option.SHADOW_FILTER=Фильтрация
 option.SHADOW_FILTER.comment=Тип фильтрации для применения к выборке теней.
-value.SHADOW_FILTER.0=Никакой
-value.SHADOW_FILTER.1=Мягко-Фиксированный
-value.SHADOW_FILTER.2=Мягко-Динамический
+value.SHADOW_FILTER.0=Никакая
+value.SHADOW_FILTER.1=Мягко-Фиксированная
+value.SHADOW_FILTER.2=Мягко-Динамическая
 
 =====Light Leak Fix=====
 
 option.LIGHT_LEAK_FIX=Исправление Световой-Дыры
-option.LIGHT_LEAK_FIX.comment=Предотвращает световую-дыру в пещерах и в других темных местах, заставляя участки с нулевым освещением-неба полностью затенять.
+option.LIGHT_LEAK_FIX.comment=Предотвращает световую-дыру в пещерах и в других темных местах, заставляя участки с нулевым небемным-освещением полностью затенять.
 
 /////SHADOW_ADCANCED_OPTIONS/////
 
@@ -1015,7 +1015,7 @@ suffix.EFFECT_BLOOM_HAND=%
 
 /////BLUR OPTIONS/////
 
-screen.EFFECT_BLUR_OPTIONS=Настройки Размытия
+screen.EFFECT_BLUR_OPTIONS=Настройка Размытия
 
 =====Blur Enabled=====
 
@@ -1063,8 +1063,8 @@ suffix.EFFECT_BLUR_ABERRATION_STRENGTH=%
 
 /////SSAO OPTIONS/////
 
-screen.EFFECT_SSAO_OPTIONS=Настройки ЭПОО
-screen.EFFECT_SSAO_OPTIONS.comment=Настройки для Экранного-Пространства Окружающей Окколюзии
+screen.EFFECT_SSAO_OPTIONS=Настройка ЭПОО
+screen.EFFECT_SSAO_OPTIONS.comment=Настройка для Экранного-Пространства Окружающей Окколюзии
 
 =====SSAO Enabled=====
 
@@ -1087,8 +1087,8 @@ suffix.EFFECT_SSAO_STRENGTH=x
 
 /////TAA OPTIONS/////
 
-screen.EFFECT_TAA_OPTIONS=Настройки ВС (TAA)
-screen.EFFECT_TAA_OPTIONS.comment=Настройки Временого Сглаживания (ВС/TAA)
+screen.EFFECT_TAA_OPTIONS=Настройка ВС (TAA)
+screen.EFFECT_TAA_OPTIONS.comment=Настройка Временого Сглаживания (ВС/TAA)
 
 =====TAA Enabled=====
 
@@ -1107,7 +1107,7 @@ option.EFFECT_TAA_SHARPEN.comment=Делает ВС (TAA) более резки�
 
 #####POST OPTIONS#####
 
-screen.POST_OPTIONS=Настройки Пост-Обработки
+screen.POST_OPTIONS=Настройка Пост-Обработки
 
 =====Post Brightness=====
 
