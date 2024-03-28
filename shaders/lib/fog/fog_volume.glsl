@@ -281,7 +281,8 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
                 shadowFade = 1.0 - shadowFade;
 
                 if (shadowFade < 1.0) {
-                    float shadowSampleBias = -0.002;//GetShadowOffsetBias(traceShadowClipPos * 2.0 - 1.0, 0.0);// (0.01 / 256.0);
+                    // float shadowSampleBias = GetShadowOffsetBias(traceShadowClipPos * 2.0 - 1.0, 0.0);// (0.01 / 256.0);
+                    float shadowSampleBias = 0.2 / -shadowDepthRange;
                     //sampleF = CompareDepth(traceShadowClipPos, vec2(0.0), shadowSampleBias);
                     float texDepth = texture(shadowtex1, traceShadowClipPos.xy).r;
                     sampleF = step(traceShadowClipPos.z - shadowSampleBias, texDepth);
@@ -394,11 +395,11 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
             #elif defined IS_LPV_ENABLED && (LIGHTING_MODE > LIGHTING_MODE_BASIC || defined IS_LPV_SKYLIGHT_ENABLED)
                 vec3 lpvLight = vec3(0.0);
 
-                #if defined LPV_GI && defined IS_LPV_SKYLIGHT_ENABLED
+                #if LPV_SKYLIGHT == LPV_SKYLIGHT_FANCY && defined IS_LPV_ENABLED
                     if (!isWater) {
                 #endif
                     lpvLight = 2.0 * GetLpvBlockLight(lpvSample);
-                #if defined LPV_GI && defined IS_LPV_SKYLIGHT_ENABLED
+                #if LPV_SKYLIGHT == LPV_SKYLIGHT_FANCY && defined IS_LPV_ENABLED
                     }
                 #endif
 

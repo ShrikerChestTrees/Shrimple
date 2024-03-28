@@ -621,12 +621,6 @@ value.LPV_SAMPLE_MODE.0=Точечные
 value.LPV_SAMPLE_MODE.1=Линейные
 value.LPV_SAMPLE_MODE.2=Воксельно-Тестовые
 
-=====LPV Bright Block=====
-
-option.LPV_BRIGHT_BLOCK=Световая Шкала Диапазона
-option.LPV_BRIGHT_BLOCK.comment=Масштабный фактор, характеризующий диапазону распространения света в пределах ОНЗ (LPV).
-suffix.LPV_BRIGHT_BLOCK=x
-
 =====LPV Sun Light Sample=====
 
 option.LPV_SHADOW_SAMPLES=Выборочный Подсчёт Солнечногосвета

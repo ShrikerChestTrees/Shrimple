@@ -15,6 +15,8 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
     const ivec3 workGroups = ivec3(8, 8, 8);
 #endif
 
+const vec2 LpvBlockSkyFalloff = vec2(0.02, 0.0);
+
 
 #if defined IRIS_FEATURE_SSBO && LPV_SIZE > 0
     #ifdef LIGHTING_FLICKER
@@ -55,7 +57,7 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
     uniform float frameTime;
     uniform int frameCounter;
-    uniform float frameTimeCounter;
+    //uniform float frameTimeCounter;
     uniform vec3 cameraPosition;
     uniform vec3 previousCameraPosition;
     uniform mat4 gbufferModelView;
@@ -63,6 +65,12 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
 
     #ifdef DISTANT_HORIZONS
         uniform float dhFarPlane;
+    #endif
+
+    #ifdef ANIM_WORLD_TIME
+        uniform int worldTime;
+    #else
+        uniform float frameTimeCounter;
     #endif
 
     #include "/lib/blocks.glsl"
@@ -222,7 +230,7 @@ float GetLpvBounceF(const in ivec3 gridBlockCell, const in ivec3 blockOffset) {
             //sampleColor *= step(shadowDist, EPSILON);// * max(1.0 - (shadowDist * far / 8.0), 0.0);
 
             vec3 sampleColor = vec3(0.0);
-            #ifdef LPV_GI
+            #if LPV_SKYLIGHT == LPV_SKYLIGHT_FANCY
                 sampleColor = textureLod(shadowcolor0, shadowPos.xy, 0).rgb;
                 sampleColor = RGBToLinear(sampleColor);
                 //sampleColor = 10.0 * _pow3(sampleColor);
@@ -302,7 +310,7 @@ vec4 mixNeighbours(const in ivec3 fragCoord, const in uint mask) {
     vec4 nZ1 = sampleShared(fragCoord + ivec3( 0,  0, -1), 5) * ((mask >> 4) & 1u);
     vec4 nZ2 = sampleShared(fragCoord + ivec3( 0,  0,  1), 4) * ((mask >> 5) & 1u);
 
-    const float avgFalloff = (1.0/6.0) * (1.0 - LPV_FALLOFF);
+    const vec4 avgFalloff = (1.0/6.0) * (1.0 - LpvBlockSkyFalloff.xxxy);
     return (nX1 + nX2 + nY1 + nY2 + nZ1 + nZ2) * avgFalloff;
 }
 
@@ -394,26 +402,28 @@ void main() {
             #if defined WORLD_SKY_ENABLED && defined RENDER_SHADOWS_ENABLED && defined IS_LPV_SKYLIGHT_ENABLED
                 vec4 shadowColorF = SampleShadow(blockLocalPos);
 
-                #ifdef LPV_GI
+                #if LPV_SKYLIGHT == LPV_SKYLIGHT_FANCY
                     if (blockId != BLOCK_WATER) {
-                        ivec3 bounceOffset = ivec3(sign(-localSunDirection));
+                        // ivec3 bounceOffset = ivec3(sign(-localSunDirection));
 
-                        // make sure diagonals dont exist
-                        int bounceYF = int(step(0.5, abs(localSunDirection.y)) + 0.5);
-                        bounceOffset.xz *= 1 - bounceYF;
-                        bounceOffset.y *= bounceYF;
+                        // // make sure diagonals dont exist
+                        // int bounceYF = int(step(0.5, abs(localSunDirection.y)) + 0.5);
+                        // bounceOffset.xz *= 1 - bounceYF;
+                        // bounceOffset.y *= bounceYF;
 
                         float sunUpF = smoothstep(-0.1, 0.3, localSunDirection.y);
-                        float skyLightBrightF = mix(WorldMoonBrightnessF, WorldSunBrightnessF, sunUpF);
-                        skyLightBrightF *= 1.0 - 0.8 * skyRainStrength;
+                        //float skyLightBrightF = mix(WorldMoonBrightnessF, WorldSunBrightnessF, sunUpF);
+                        //skyLightBrightF *= 1.0 - 0.8 * skyRainStrength;
                         // TODO: make darker at night
 
-                        #if LIGHTING_MODE == LIGHTING_MODE_FLOODFILL
-                            // float skyLightRange = mix(1.0, 6.0, sunUpF);
-                            float skyLightRange = mix(2.0, 4.0, sunUpF);
+                        #if LIGHTING_MODE >= LIGHTING_MODE_FLOODFILL
+                            float skyLightRange = mix(1.0, 4.0, sunUpF) * DynamicLightAmbientF;
+                        //     // float skyLightRange = mix(1.0, 6.0, sunUpF);
+                        //     float skyLightRange = mix(2.0, 4.0, sunUpF);
                         #else
-                           // float skyLightRange = mix(1.0, 16.0, sunUpF);
-                            float skyLightRange = mix(1.0, 6.0, sunUpF);
+                            float skyLightRange = mix(4.0, 16.0, sunUpF);
+                        //    // float skyLightRange = mix(1.0, 16.0, sunUpF);
+                        //     float skyLightRange = mix(1.0, 6.0, sunUpF);
                         #endif
 
                         skyLightRange *= 1.0 - 0.8 * skyRainStrength;
@@ -421,12 +431,12 @@ void main() {
                         //float bounceF = GetLpvBounceF(voxelPos, bounceOffset);
 
                         //#if LIGHTING_MODE == LIGHTING_MODE_FLOODFILL
-                            skyLightBrightF *= DynamicLightAmbientF;
+                        //    skyLightBrightF *= DynamicLightAmbientF;
                         //#endif
 
 
 
-                        vec3 skyLight = RgbToHsv(shadowColorF.rgb);
+                        vec3 skyLight = RgbToHsv(shadowColorF.rgb * WorldSkyLightColor);
                         skyLight.b = exp2(skyLightRange * shadowColorF.a) - 1.0;
                         skyLight = HsvToRgb(skyLight);
 

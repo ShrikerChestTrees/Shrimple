@@ -247,21 +247,17 @@ const bool colortex15Clear = true;
 
 // Dynamic LPV
 #define LPV_SIZE 0 // [0 1 2 3]
+#define LPV_SKYLIGHT 0 // [0 1 2]
 #define LPV_SAMPLE_MODE 1 // [0 1 2]
-#define LPV_SHADOW_SAMPLES 0 // [0 1 2 3 4 5 6 7 8 9 12 15 18 21 25]
+#define LPV_SHADOW_SAMPLES 6 // [1 2 3 4 5 6 7 8 9 12 15 18 21 25]
 #define LPV_LIGHTMAP_MIX 20 // [0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 55 60 65 70 75 80 85 90 95 100]
-#define LPV_BRIGHT_BLOCK 1 // [1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20]
-//#define LPV_RANGE 100 // [25 50 75 100 150 200 250 300 400 600 800 1200 1600]
-#define LPV_SKYLIGHT_ENABLED
-#define LPV_BRIGHT_SUN 1.0
-#define LPV_BRIGHT_MOON 0.02
-#define LPV_FALLOFF 0.2 // [0.001]
 #define LPV_SKYLIGHT_RANGE 32.0 // [16 24 32]
 #define LPV_BLOCKLIGHT_SCALE 32.0 // [16 24 32 48 64 96 128]
+#define LPV_FRUSTUM_OFFSET 30 // [0 5 10 15 20 25 30 35 40 45 50]
 //#define LPV_BLEND_ALT
 #define LPV_GLASS_TINT
 //#define LPV_VOXEL_TEST
-//#define LPV_GI
+
 
 //#define DYN_LIGHT_OCTREE
 #define DYN_LIGHT_OCTREE_LEVELS 2u
@@ -296,7 +292,7 @@ const bool colortex15Clear = true;
 #define EFFECT_BLOOM_ENABLED
 #define EFFECT_BLOOM_STRENGTH 60 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define EFFECT_BLOOM_POWER 6.0 // [1.0 1.5 2.0 2.5 3.0 3.5 4.0 4.5 5.0 6.0 7.0 8.0 9.0]
-#define EFFECT_BLOOM_HAND 20 // [0 10 20 30 40 50 60 70 80 90 100]
+#define EFFECT_BLOOM_HAND 20 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define EFFECT_BLOOM_TILE_MAX 6
 
 #define EFFECT_BLUR_ENABLED
@@ -332,7 +328,7 @@ const bool colortex15Clear = true;
 #define POST_TEMP 78 // [10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 52 54 56 58 60 62 64 66 68 70 72 74 76 78 80 82 84 86 88 90 92 94 96 98 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400]
 #define GAMMA_OUT 2.2 // [0.6 0.8 1.0 1.2 1.4 1.6 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.8 3.0 3.4 3.8 4.2 4.6 5.0 6.0 7.0 8.0]
 #define POST_WHITE_POINT 300 // [50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 700 800 900]
-#define POST_EXPOSURE -1.4 // [-2.0 -1.8 -1.6 -1.4 -1.2 -1.0 -0.8 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0]
+#define POST_EXPOSURE -1.4 // [-6.0 -5.5 -5.0 -4.5 -4.0 -3.5 -3.0 -2.8 -2.6 -2.4 -2.2 -2.0 -1.8 -1.6 -1.4 -1.2 -1.0 -0.8 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0]
 
 
 // Debug Options
@@ -481,7 +477,7 @@ const bool colortex15Clear = true;
     #define IS_LPV_ENABLED
 #endif
 
-#if defined IS_LPV_ENABLED && defined LPV_SKYLIGHT_ENABLED && LPV_SHADOW_SAMPLES > 0
+#if defined IS_LPV_ENABLED && LPV_SKYLIGHT != LPV_SKYLIGHT_NONE
     #define IS_LPV_SKYLIGHT_ENABLED
 #endif
 
@@ -586,7 +582,7 @@ const float DynamicLightPenumbraF = LIGHTING_TRACE_PENUMBRA * 0.01;
 const float DynamicLightBrightness = LIGHTING_BRIGHTNESS * 0.01;
 const float DynamicLightRangeF = LIGHTING_RANGE * 0.01;
 const float LpvLightmapMixF = LPV_LIGHTMAP_MIX * 0.01;
-const float LpvBlockLightF = exp2(LPV_BRIGHT_BLOCK - 1);
+// const float LpvBlockLightF = exp2(LPV_BRIGHT_BLOCK - 1);
 const float ShadowMinPcfSize = SHADOW_PCF_SIZE_MIN * 0.01;
 const float ShadowMaxPcfSize = SHADOW_PCF_SIZE_MAX * 0.01;
 const float ShadowBiasScale = SHADOW_BIAS_SCALE * 0.01;
