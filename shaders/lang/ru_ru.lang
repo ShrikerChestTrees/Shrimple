@@ -1,4 +1,4 @@
-Provided by ShrikerChestTree v13.2
+Provided by ShrikerChestTree v13.3
 
 /////PROFILE/////
 
@@ -629,6 +629,13 @@ suffix.LPV_LIGHTMAP_MIX=%
 /////Advanced FloodFill Options/////
 
 screen.LIGHTING_LPV_ADVANCED_OPTIONS=Дополнительная Настройка НаливногоЗаполнения
+
+=====Sample Mode=====
+
+option.LPV_SAMPLE_MODE=Режим Образца
+value.LPV_SAMPLE_MODE.0=Ближайший
+value.LPV_SAMPLE_MODE.1=Линейный
+value.LPV_SAMPLE_MODE.2=Кубический
 
 =====LPV Sun Light Sample=====
 
