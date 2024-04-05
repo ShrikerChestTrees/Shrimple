@@ -9,6 +9,7 @@ in vec2 texcoord;
 
 #ifdef RENDER_SHADOWS_ENABLED
     uniform sampler2D depthtex1;
+    uniform sampler2D depthtex2;
 
     #ifdef DISTANT_HORIZONS
         uniform sampler2D dhDepthTex;
@@ -30,10 +31,21 @@ in vec2 texcoord;
         #endif
     #endif
 
+    #if defined WORLD_SKY_ENABLED && ((MATERIAL_REFLECTIONS != REFLECT_NONE && defined MATERIAL_REFLECT_CLOUDS) || defined SHADOW_CLOUD_ENABLED)
+        #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+            uniform sampler3D TEX_CLOUDS;
+        #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
+            uniform sampler2D TEX_CLOUDS_VANILLA;
+        #endif
+    #endif
+
     uniform mat4 gbufferModelView;
     uniform mat4 gbufferProjection;
     uniform mat4 gbufferModelViewInverse;
     uniform mat4 gbufferProjectionInverse;
+    uniform mat4 shadowModelView;
+    uniform mat4 shadowProjection;
+    uniform vec3 cameraPosition;
     uniform int frameCounter;
 
     uniform vec2 viewSize;
@@ -43,8 +55,8 @@ in vec2 texcoord;
     uniform float near;
     uniform float far;
 
-    #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
-        uniform vec3 cameraPosition;
+    #ifndef IRIS_FEATURE_SSBO
+        uniform vec3 shadowLightPosition;
     #endif
 
     #ifdef DISTANT_HORIZONS
@@ -54,6 +66,16 @@ in vec2 texcoord;
         uniform float dhFarPlane;
     #endif
 
+    #if defined WORLD_SKY_ENABLED && defined SHADOW_CLOUD_ENABLED
+        uniform float skyRainStrength;
+        uniform float cloudHeight;
+        uniform float cloudTime;
+
+        #if SKY_CLOUD_TYPE == CLOUDS_VANILLA
+            uniform vec3 eyePosition;
+        #endif
+    #endif
+
     #include "/lib/sampling/depth.glsl"
     #include "/lib/sampling/ign.glsl"
     #include "/lib/sampling/noise.glsl"
@@ -61,6 +83,20 @@ in vec2 texcoord;
     #ifdef IRIS_FEATURE_SSBO
         #include "/lib/buffers/scene.glsl"
         #include "/lib/buffers/shadow.glsl"
+    #endif
+
+    #if defined WORLD_SKY_ENABLED && defined IS_IRIS
+        #include "/lib/clouds/cloud_vars.glsl"
+
+        #if (defined MATERIAL_REFLECT_CLOUDS && MATERIAL_REFLECTIONS != REFLECT_NONE) || defined RENDER_CLOUD_SHADOWS_ENABLED
+            #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+                #include "/lib/clouds/cloud_custom.glsl"
+                #include "/lib/clouds/cloud_custom_shadow.glsl"
+            #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
+                #include "/lib/clouds/cloud_vanilla.glsl"
+                #include "/lib/clouds/cloud_vanilla_shadow.glsl"
+            #endif
+        #endif
     #endif
 
     #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
@@ -82,6 +118,14 @@ void main() {
     #ifdef RENDER_SHADOWS_ENABLED
         ivec2 uv = ivec2(texcoord * viewSize);
         float depth = textureLod(depthtex1, texcoord, 0).r;
+        float depthHand = textureLod(depthtex2, texcoord, 0).r;
+        bool isHand = depthHand > depth + EPSILON;
+
+        if (isHand) {
+            depth = depth * 2.0 - 1.0;
+            depth /= MC_HAND_DEPTH;
+            depth = depth * 0.5 + 0.5;
+        }
 
         #ifdef DISTANT_HORIZONS
             float dhDepth = textureLod(dhDepthTex, texcoord, 0).r;
@@ -144,7 +188,7 @@ void main() {
                 // float lmShadow = pow(lmFinal.y, 9);
                 // if (shadowPos == clamp(shadowPos, -0.85, 0.85)) lmShadow = 1.0;
 
-                float zRange = -2.0 / shadowProjectionEx[2][2];
+                float zRange = GetShadowRange();
             #endif
 
             // #ifdef SHADOW_COLORED
@@ -195,6 +239,21 @@ void main() {
 
             shadowFinal *= mix(shadowSample, vec3(1.0), shadowFade);
 
+            #if defined WORLD_SKY_ENABLED && defined RENDER_CLOUD_SHADOWS_ENABLED
+                #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+                    vec3 worldPos = cameraPosition + localPos;
+                    float cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+                    shadowFinal *= cloudShadow;
+                #else
+                    vec2 cloudOffset = GetCloudOffset();
+                    vec3 camOffset = GetCloudCameraOffset();
+                    //vec3 worldPos = cameraPosition + localPos;
+                    //float cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+                    float cloudShadow = SampleCloudShadow(localPos, localSkyLightDirection, cloudOffset, camOffset, 0.5);
+                    shadowFinal *= cloudShadow;
+                #endif
+            #endif
+
             #ifdef SHADOW_SCREEN
                 float viewDist = length(viewPos);
                 vec3 lightViewDir = mat3(gbufferModelView) * localSkyLightDirection;
@@ -229,6 +288,17 @@ void main() {
 
                     ivec2 sampleUV = ivec2(traceScreenPos.xy * viewSize);
                     float sampleDepth = texelFetch(depthtex1, sampleUV, 0).r;
+                    float sampleDepthHand = texelFetch(depthtex2, sampleUV, 0).r;
+                    bool isSampleHand = sampleDepthHand > sampleDepth + EPSILON;
+
+                    if (isSampleHand && !isHand) continue;
+
+                    if (sampleDepthHand > sampleDepth + EPSILON) {
+                        sampleDepth = sampleDepth * 2.0 - 1.0;
+                        sampleDepth /= MC_HAND_DEPTH;
+                        sampleDepth = sampleDepth * 0.5 + 0.5;
+                    }
+
                     float sampleDepthL = linearizeDepth(sampleDepth, near, farPlane);
 
                     #ifdef DISTANT_HORIZONS

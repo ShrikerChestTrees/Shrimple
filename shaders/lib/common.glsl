@@ -88,9 +88,9 @@ const bool colortex15Clear = true;
 
 // Sky Fog Options
 #define SKY_VOL_FOG_TYPE 2 // [0 1 2]
-#define SKY_FOG_DENSITY 6 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.2 1.4 1.6 1.8 2.0 2.5 3.0 3.5 4.0 4.5 5 6 7 8 9 10 12 14 16 18 20 24 28 32 36 40 48 56 62 70]
+#define SKY_FOG_DENSITY 6.0 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.2 1.4 1.6 1.8 2.0 2.5 3.0 3.5 4.0 4.5 5.0 6.0 7.0 8.0 9.0 10 12 14 16 18 20 24 28 32 36 40 48 56 62 70]
 #define SKY_CAVE_FOG_ENABLED
-#define SKY_CAVE_FOG_DENSITY 32 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.2 1.4 1.6 1.8 2.0 2.5 3.0 3.5 4.0 4.5 5 6 7 8 9 10 12 14 16 18 20 24 28 32 36 40 48 56 62 70]
+#define SKY_CAVE_FOG_DENSITY 24 // [0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.2 1.4 1.6 1.8 2.0 2.5 3.0 3.5 4.0 4.5 5.0 6.0 7.0 8.0 9.0 10 12 14 16 18 20 24 28 32 36 40 48 56 62 70]
 #define SKY_BORDER_FOG_ENABLED
 #define SKY_FOG_SHAPE 0 // [0 1 2]
 
@@ -192,8 +192,8 @@ const bool colortex15Clear = true;
 #define SHADOW_BIAS_SCALE 100 // [10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 750 800]
 #define SHADOW_DISTORT_FACTOR 80 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20 21 22 23 24 25 26 27 28 29 30 31 32 33 34 35 36 37 38 39 40 41 42 43 44 45 46 47 48 49 50 51 52 53 54 55 56 57 58 59 60 61 62 63 64 65 66 67 68 69 70 71 72 73 74 75 76 77 78 79 80 81 82 83 84 85 86 87 88 89 90 91 92 93 94 95 96 97 98 99 100]
 #define SHADOW_FILTER 2 // [0 1 2]
-#define SHADOW_PCF_SIZE_MIN 1.0 // [0.0 0.2 0.4 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0 2.2 2.4 2.6 2.8 3.0 3.5 4.0 4.5 5.0 5.5 6.0]
-#define SHADOW_PCF_SIZE_MAX 40 // [2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 35 40 45 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 250 300 350 400]
+#define SHADOW_PCF_SIZE_MIN 0.2 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.7 1.8 1.9 2.0]
+#define SHADOW_PCF_SIZE_MAX 1.4 // [0.2 0.4 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0 2.2 2.4 2.6 2.8 3.0 3.5 4.0 4.5 5.0 6.0 7.0 8.0]
 #define SHADOW_PCF_SAMPLES 6 // [2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32]
 #define SHADOW_PCSS_SAMPLES 4 // [2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32]
 #define SHADOW_BLUR_SIZE 1 // [0 1 2]
@@ -216,8 +216,8 @@ const bool colortex15Clear = true;
 // Lighting
 #define LIGHTING_MODE 1 // [0 1 2 3]
 #define LIGHTING_MODE_HAND 1 // [0 1 2]
-#define LIGHTING_BRIGHTNESS 200 // [20 40 60 80 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 750 800]
-#define LIGHTING_AMBIENT 50 // [0 2 4 6 8 10 12 14 16 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
+#define LIGHTING_BRIGHTNESS 400 // [20 40 60 80 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 750 800]
+#define LIGHTING_AMBIENT 30 // [0 2 4 6 8 10 12 14 16 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define LIGHTING_MIN 0.6 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.8 2.0 2.2 2.4 2.6 2.8 3.0]
 #define LIGHTING_RANGE 100 // [5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 105 110 115 120 125 130 135 140 145 150 155 160 165 170 175 180 185 190 195 200 210 220 230 240 250 260 270 280 290 300]
 #define LIGHTING_FLICKER
@@ -250,7 +250,7 @@ const bool colortex15Clear = true;
 #define LPV_SKYLIGHT 0 // [0 1 2]
 #define LPV_SAMPLE_MODE 1 // [0 1 2]
 #define LPV_SHADOW_SAMPLES 6 // [1 2 3 4 5 6 7 8 9 12 15 18 21 25]
-#define LPV_LIGHTMAP_MIX 20 // [0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 55 60 65 70 75 80 85 90 95 100]
+#define LPV_LIGHTMAP_MIX 10 // [0 2 4 6 8 10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 55 60 65 70 75 80 85 90 95 100]
 #define LPV_SKYLIGHT_RANGE 32.0 // [16 24 32]
 #define LPV_BLOCKLIGHT_SCALE 32.0 // [16 24 32 48 64 96 128]
 #define LPV_FRUSTUM_OFFSET 30 // [0 5 10 15 20 25 30 35 40 45 50]
@@ -328,7 +328,7 @@ const bool colortex15Clear = true;
 #define POST_TEMP 78 // [10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 52 54 56 58 60 62 64 66 68 70 72 74 76 78 80 82 84 86 88 90 92 94 96 98 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400]
 #define GAMMA_OUT 2.2 // [0.6 0.8 1.0 1.2 1.4 1.6 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.8 3.0 3.4 3.8 4.2 4.6 5.0 6.0 7.0 8.0]
 #define POST_WHITE_POINT 300 // [50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 700 800 900]
-#define POST_EXPOSURE -1.4 // [-6.0 -5.5 -5.0 -4.5 -4.0 -3.5 -3.0 -2.8 -2.6 -2.4 -2.2 -2.0 -1.8 -1.6 -1.4 -1.2 -1.0 -0.8 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0]
+#define POST_EXPOSURE -1.6 // [-6.0 -5.5 -5.0 -4.5 -4.0 -3.5 -3.0 -2.8 -2.6 -2.4 -2.2 -2.0 -1.8 -1.6 -1.4 -1.2 -1.0 -0.8 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0]
 
 
 // Debug Options
@@ -359,7 +359,7 @@ const bool colortex15Clear = true;
 #define MIP_BIAS 0.25 // [1.0 0.5 0.25]
 #define WHITEWORLD_VALUE 0.6
 //#define TRANSLUCENT_SSS_ENABLED
-//#define DEFERRED_PARTICLES
+#define DEFERRED_PARTICLES
 #define RIPPLE_STRENGTH 0.03
 //#define HCM_LAZANYI
 
@@ -583,8 +583,8 @@ const float DynamicLightBrightness = LIGHTING_BRIGHTNESS * 0.01;
 const float DynamicLightRangeF = LIGHTING_RANGE * 0.01;
 const float LpvLightmapMixF = LPV_LIGHTMAP_MIX * 0.01;
 // const float LpvBlockLightF = exp2(LPV_BRIGHT_BLOCK - 1);
-const float ShadowMinPcfSize = SHADOW_PCF_SIZE_MIN * 0.01;
-const float ShadowMaxPcfSize = SHADOW_PCF_SIZE_MAX * 0.01;
+const float ShadowMinPcfSize = SHADOW_PCF_SIZE_MIN;
+const float ShadowMaxPcfSize = SHADOW_PCF_SIZE_MAX;
 const float ShadowBiasScale = SHADOW_BIAS_SCALE * 0.01;
 const float ShadowDistortF = 1.0 - SHADOW_DISTORT_FACTOR * 0.01;
 const float ShadowCloudBrightnessF = SHADOW_CLOUD_BRIGHTNESS * 0.01;
@@ -600,6 +600,9 @@ const float dh_clipDistF = DH_CLIP_DIST * 0.01;
 
 const float WorldWaterOpacityF = 0.02;
 const float ShadowScreenSlope = 0.85;
+
+const float GoldenAngle = PI * (3.0 - sqrt(5.0));
+const float PHI = (1.0 + sqrt(5.0)) / 2.0;
 
 const float invPI = 1.0 / PI;
 const vec3 luma_factor = vec3(0.2126, 0.7152, 0.0722);
@@ -771,3 +774,7 @@ float smootherstep(const in float x) {
 vec3 mul3(const in mat4 matrix, const in vec3 vector) {
 	return mat3(matrix) * vector + matrix[3].xyz;
 }
+
+// vec3 getCameraViewDir(const in mat4 matModelView) {
+//     return vec3(matModelView[0].z, matModelView[1].z, matModelView[2].z);
+// }

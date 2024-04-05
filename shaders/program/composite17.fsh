@@ -184,8 +184,11 @@ uniform ivec2 eyeBrightnessSmooth;
 
     #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
         #include "/lib/clouds/cloud_custom.glsl"
+        #include "/lib/clouds/cloud_custom_shadow.glsl"
+        #include "/lib/clouds/cloud_custom_trace.glsl"
     #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
         #include "/lib/clouds/cloud_vanilla.glsl"
+        #include "/lib/clouds/cloud_vanilla_shadow.glsl"
     #endif
 
     #include "/lib/sky/sky_trace.glsl"
@@ -362,11 +365,12 @@ void main() {
         #endif
 
             #if SKY_CLOUD_TYPE <= CLOUDS_VANILLA
-                #ifdef DISTANT_HORIZONS
-                    float _far = max(SkyFar, dhFarPlane);
-                #else
-                    float _far = SkyFar;
-                #endif
+                // #ifdef DISTANT_HORIZONS
+                //     float _far = max(SkyFar, dhFarPlane);
+                // #else
+                //     float _far = SkyFar;
+                // #endif
+                float _far = SkyFar;
 
                 if (depthTrans < 1.0)
                     _far = min(_far, viewDist);
@@ -379,11 +383,12 @@ void main() {
 
                     float cloudDistNear = farMax;
 
-                    #ifdef DISTANT_HORIZONS
-                        float cloudDistFar = max(SkyFar, dhFarPlane);
-                    #else
-                        float cloudDistFar = SkyFar;
-                    #endif
+                    // #ifdef DISTANT_HORIZONS
+                    //     float cloudDistFar = max(SkyFar, dhFarPlane);
+                    // #else
+                    //     float cloudDistFar = SkyFar;
+                    // #endif
+                    float cloudDistFar = SkyFar;
 
                     if (depthTrans < 1.0) {
                         cloudDistNear = 0.0;
@@ -411,8 +416,8 @@ void main() {
                         cloudDistFar = min(cloudDistFar, viewDist);
                 #endif
 
-                // if (cloudDistFar > cloudDistNear)
-                //     _TraceClouds(scatterFinal, transmitFinal, cameraPosition, localViewDir, cloudDistNear, cloudDistFar, 64, CLOUD_SHADOW_STEPS);
+                if (cloudDistFar > cloudDistNear)
+                    _TraceClouds(scatterFinal, transmitFinal, cameraPosition, localViewDir, cloudDistNear, cloudDistFar, 64, CLOUD_SHADOW_STEPS);
             #endif
 
         #ifdef WORLD_WATER_ENABLED

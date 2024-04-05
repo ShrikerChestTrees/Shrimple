@@ -73,7 +73,7 @@ void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 
 
     float diffuseF = 1.0;
     #if defined IS_LPV_SKYLIGHT_ENABLED && !defined RENDER_CLOUDS
-        diffuseF = 0.75;
+        //diffuseF = 0.75;
 
         vec3 lpvPos = GetLPVPosition(localPos);
 
@@ -87,20 +87,32 @@ void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 
 
         #if LPV_SKYLIGHT == LPV_SKYLIGHT_FANCY
             #if LIGHTING_MODE >= LIGHTING_MODE_FLOODFILL
-                lpvSkyLight *= 0.3;
+                //lpvSkyLight *= 0.3;
             #endif
 
             vec3 lpvSkyLightColor = GetLpvBlockLight(lpvSample);
 
             // lpvSkyLightColor *= lpvSkyLight / max(luminance(lpvSkyLightColor), EPSILON);
             lpvSkyLightColor = RgbToHsv(lpvSkyLightColor);
+
+            // ensure saturation < brightness
+            lpvSkyLightColor.y = min(lpvSkyLightColor.y, lpvSkyLightColor.z * 6.0);
+
             lpvSkyLightColor.z = lpvSkyLight;
+
             lpvSkyLightColor = HsvToRgb(lpvSkyLightColor);
 
             ambientLight = mix(ambientLight, lpvSkyLightColor, lpvFade);
         #else
             ambientLight = mix(ambientLight, vec3(lpvSkyLight), lpvFade);
         #endif
+    #endif
+
+    #ifndef IRIS_FEATURE_SSBO
+        vec3 localSunDirection = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+
+        vec3 WorldSunLightColor = GetSkySunColor(localSunDirection.y);
+        vec3 WorldMoonLightColor = GetSkyMoonColor(-localSunDirection.y);
     #endif
 
     float horizonF = min(abs(localSunDirection.y + 0.1), 1.0);

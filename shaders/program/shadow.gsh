@@ -41,6 +41,7 @@ uniform float far;
 #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
     uniform mat4 gbufferProjection;
     uniform mat4 shadowModelView;
+    uniform mat4 shadowProjection;
     uniform float near;
 
     #ifdef DISTANT_HORIZONS
@@ -52,6 +53,7 @@ uniform float far;
     uniform int entityId;
     uniform int frameCounter;
     uniform vec3 eyePosition;
+    uniform mat4 gbufferModelViewInverse;
     uniform vec3 previousCameraPosition;
     uniform mat4 gbufferPreviousModelView;
     uniform int currentRenderedItemId;
@@ -257,7 +259,7 @@ void main() {
                     }
 
                     if (lightRange > EPSILON) {
-                        vec3 viewDir = getCameraViewDir(gbufferModelView);
+                        vec3 viewDir = gbufferModelViewInverse[2].xyz;
                         vec3 lpvPos = GetLpvCenter(cameraPosition, viewDir) + originPos;
                         ivec3 imgCoordPrev = GetLPVImgCoord(lpvPos) + GetLPVFrameOffset();
 

@@ -145,6 +145,16 @@ uniform int heldBlockLightValue2;
     uniform float dhFarPlane;
 #endif
 
+#ifndef IRIS_FEATURE_SSBO
+    #ifdef WORLD_SKY_ENABLED
+        uniform float lightningPosition;
+    #endif
+
+    #if MC_VERSION > 11900
+        uniform float darknessFactor;
+    #endif
+#endif
+
 #if MC_VERSION >= 11700 && defined ALPHATESTREF_ENABLED
     uniform float alphaTestRef;
 #endif
@@ -262,6 +272,8 @@ uniform int heldBlockLightValue2;
     #if (defined MATERIAL_REFLECT_CLOUDS && MATERIAL_REFLECTIONS != REFLECT_NONE) || defined RENDER_CLOUD_SHADOWS_ENABLED
         #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
             #include "/lib/clouds/cloud_custom.glsl"
+            #include "/lib/clouds/cloud_custom_shadow.glsl"
+            #include "/lib/clouds/cloud_custom_trace.glsl"
         #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
             #include "/lib/clouds/cloud_vanilla.glsl"
         #endif
@@ -410,12 +422,12 @@ layout(location = 0) out vec4 outFinal;
 
             vec3 worldPos = cameraPosition + localPos;
 
-            #if defined WORLD_SKY_ENABLED && defined RENDER_CLOUD_SHADOWS_ENABLED && SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                float cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
-                // deferredShadow.rgb *= 1.0 - (1.0 - cloudShadow) * (1.0 - ShadowCloudBrightnessF);
-                deferredShadow.rgb *= cloudShadow;
-                // deferredShadow.rgb *= cloudShadow;
-            #endif
+            // #if defined WORLD_SKY_ENABLED && defined RENDER_CLOUD_SHADOWS_ENABLED && SKY_CLOUD_TYPE > CLOUDS_VANILLA
+            //     float cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+            //     // deferredShadow.rgb *= 1.0 - (1.0 - cloudShadow) * (1.0 - ShadowCloudBrightnessF);
+            //     deferredShadow.rgb *= cloudShadow;
+            //     // deferredShadow.rgb *= cloudShadow;
+            // #endif
 
             vec3 albedo = RGBToLinear(deferredColor);
             float occlusion = deferredLighting.z;
@@ -599,6 +611,10 @@ layout(location = 0) out vec4 outFinal;
 
             #ifdef SKY_BORDER_FOG_ENABLED
                 #if SKY_TYPE == SKY_TYPE_CUSTOM
+                    #ifndef IRIS_FEATURE_SSBO
+                        vec3 localSunDirection = normalize(mat3(gbufferModelViewInverse) * sunPosition);
+                    #endif
+
                     vec3 fogColorFinal = GetCustomSkyColor(localSunDirection.y, localViewDir.y);
                     fogColorFinal *= WorldSkyBrightnessF;
 

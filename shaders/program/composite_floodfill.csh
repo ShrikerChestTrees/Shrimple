@@ -15,7 +15,7 @@ layout (local_size_x = 8, local_size_y = 8, local_size_z = 8) in;
     const ivec3 workGroups = ivec3(8, 8, 8);
 #endif
 
-const vec2 LpvBlockSkyFalloff = vec2(0.02, 0.0);
+const vec2 LpvBlockSkyFalloff = vec2(0.04, 0.04);
 
 
 #if defined IRIS_FEATURE_SSBO && LPV_SIZE > 0
@@ -23,48 +23,56 @@ const vec2 LpvBlockSkyFalloff = vec2(0.02, 0.0);
         uniform sampler2D noisetex;
     #endif
 
-    #ifdef WORLD_WATER_ENABLED
-        uniform vec3 WaterAbsorbColor;
-        uniform vec3 WaterScatterColor;
-        uniform float waterDensitySmooth;
-    #endif
+    #ifdef RENDER_SHADOWS_ENABLED
+        uniform sampler2D shadowtex0;
+        uniform sampler2D shadowtex1;
 
-    #ifdef WORLD_SKY_ENABLED
-        uniform float rainStrength;
-        uniform float skyRainStrength;
+        uniform sampler2D shadowcolor0;
 
-        #ifdef RENDER_SHADOWS_ENABLED
-            uniform sampler2D shadowtex0;
-            uniform sampler2D shadowtex1;
-
-            uniform sampler2D shadowcolor0;
-
-            #ifdef SHADOW_CLOUD_ENABLED
-                #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                    uniform sampler3D TEX_CLOUDS;
-                #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
-                    uniform sampler2D TEX_CLOUDS_VANILLA;
-                #endif
-            #endif
-
-            uniform float far;
-
-            #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
-                uniform mat4 shadowModelView;
+        #ifdef SHADOW_CLOUD_ENABLED
+            #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+                uniform sampler3D TEX_CLOUDS;
+            #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
+                uniform sampler2D TEX_CLOUDS_VANILLA;
             #endif
         #endif
     #endif
 
     uniform float frameTime;
     uniform int frameCounter;
-    //uniform float frameTimeCounter;
     uniform vec3 cameraPosition;
     uniform vec3 previousCameraPosition;
-    uniform mat4 gbufferModelView;
+    uniform mat4 gbufferModelViewInverse;
     uniform mat4 gbufferPreviousModelView;
+
+    #ifdef WORLD_SKY_ENABLED
+        uniform float rainStrength;
+        uniform float skyRainStrength;
+
+        #ifdef RENDER_SHADOWS_ENABLED
+            uniform mat4 shadowProjection;
+            uniform float far;
+
+            #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+                uniform mat4 shadowModelView;
+            #endif
+        #endif
+
+        #ifdef SHADOW_CLOUD_ENABLED
+            uniform vec3 eyePosition;
+            uniform float cloudHeight;
+            uniform float cloudTime;
+        #endif
+    #endif
 
     #ifdef DISTANT_HORIZONS
         uniform float dhFarPlane;
+    #endif
+
+    #ifdef WORLD_WATER_ENABLED
+        uniform vec3 WaterAbsorbColor;
+        uniform vec3 WaterScatterColor;
+        uniform float waterDensitySmooth;
     #endif
 
     #ifdef ANIM_WORLD_TIME
@@ -109,20 +117,37 @@ const vec2 LpvBlockSkyFalloff = vec2(0.02, 0.0);
         #include "/lib/sampling/ign.glsl"
 
         #include "/lib/world/sky.glsl"
+        #include "/lib/clouds/cloud_vars.glsl"
 
         #ifdef WORLD_WATER_ENABLED
             #include "/lib/world/water.glsl"
         #endif
 
-        #ifdef SHADOW_CLOUD_ENABLED
-            #include "/lib/shadows/render.glsl"
-        #endif
+        // #ifdef SHADOW_CLOUD_ENABLED
+        //     #include "/lib/shadows/render.glsl"
+        // #endif
 
         #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
             #include "/lib/shadows/cascaded/common.glsl"
         #else
             #include "/lib/shadows/distorted/common.glsl"
         #endif
+
+        #ifdef RENDER_CLOUD_SHADOWS_ENABLED
+            #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+                #include "/lib/clouds/cloud_custom.glsl"
+                #include "/lib/clouds/cloud_custom_shadow.glsl"
+            #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
+                #include "/lib/clouds/cloud_vanilla.glsl"
+                #include "/lib/clouds/cloud_vanilla_shadow.glsl"
+            #endif
+        #endif
+    #endif
+
+    #if defined WORLD_SKY_ENABLED && defined IS_IRIS
+        // #include "/lib/world/lightning.glsl"
+        //#include "/lib/lighting/hg.glsl"
+
     #endif
 #endif
 
@@ -133,7 +158,7 @@ ivec3 GetLPVVoxelOffset() {
     vec3 voxelCameraOffset = fract(cameraPosition / LIGHT_BIN_SIZE) * LIGHT_BIN_SIZE;
     ivec3 voxelOrigin = ivec3(voxelCameraOffset + VoxelBlockCenter + 0.5);
 
-    vec3 viewDir = getCameraViewDir(gbufferModelView);
+    vec3 viewDir = gbufferModelViewInverse[2].xyz;
     ivec3 lpvOrigin = ivec3(GetLpvCenter(cameraPosition, viewDir) + 0.5);
 
     return voxelOrigin - lpvOrigin;
@@ -377,7 +402,7 @@ void main() {
 
         // vec3 blockLocalPos = gridCell * LIGHT_BIN_SIZE + blockCell - VoxelBlockCenter + cameraOffset + 0.5;
 
-        vec3 viewDir = getCameraViewDir(gbufferModelView);
+        vec3 viewDir = gbufferModelViewInverse[2].xyz;
         vec3 lpvCenter = GetLpvCenter(cameraPosition, viewDir);
         vec3 blockLocalPos = imgCoord - lpvCenter + 0.5;
 
@@ -407,6 +432,20 @@ void main() {
                 float shadowDist;
                 vec4 shadowColorF = SampleShadow(blockLocalPos, shadowDist);
 
+                #ifdef RENDER_CLOUD_SHADOWS_ENABLED
+                    #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+                        vec3 worldPos = cameraPosition + blockLocalPos;
+                        float cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+                    #else
+                        vec2 cloudOffset = GetCloudOffset();
+                        vec3 camOffset = GetCloudCameraOffset();
+                        float cloudShadow = SampleCloudShadow(blockLocalPos, localSkyLightDirection, cloudOffset, camOffset, 0.5);
+                    #endif
+                    shadowColorF.a *= cloudShadow;
+                #endif
+
+                float sunUpF = smoothstep(-0.1, 0.3, localSunDirection.y);
+
                 #if LPV_SKYLIGHT == LPV_SKYLIGHT_FANCY
                     if (blockId != BLOCK_WATER) {
                         // ivec3 bounceOffset = ivec3(sign(-localSunDirection));
@@ -416,13 +455,13 @@ void main() {
                         // bounceOffset.xz *= 1 - bounceYF;
                         // bounceOffset.y *= bounceYF;
 
-                        float sunUpF = smoothstep(-0.1, 0.3, localSunDirection.y);
+                        // float sunUpF = smoothstep(-0.1, 0.3, localSunDirection.y);
                         //float skyLightBrightF = mix(WorldMoonBrightnessF, WorldSunBrightnessF, sunUpF);
                         //skyLightBrightF *= 1.0 - 0.8 * skyRainStrength;
                         // TODO: make darker at night
 
                         #if LIGHTING_MODE >= LIGHTING_MODE_FLOODFILL
-                            float skyLightRange = mix(1.0, 4.0, sunUpF) * DynamicLightAmbientF;
+                            float skyLightRange = mix(0.5, 8.0, sunUpF) * DynamicLightAmbientF;
                         //     // float skyLightRange = mix(1.0, 6.0, sunUpF);
                         //     float skyLightRange = mix(2.0, 4.0, sunUpF);
                         #else
@@ -452,7 +491,8 @@ void main() {
                     }
                 #endif
 
-                float skyLightFinal = exp2(LPV_SKYLIGHT_RANGE * shadowColorF.a) - 1.0;
+                float skyLightDistF = sunUpF * 0.75 + 0.25;
+                float skyLightFinal = exp2(LPV_SKYLIGHT_RANGE * skyLightDistF * shadowColorF.a) - 1.0;
                 lightValue.a = max(lightValue.a, skyLightFinal);
             #endif
         }
