@@ -275,7 +275,7 @@ float GetLpvBounceF(const in ivec3 gridBlockCell, const in ivec3 blockOffset) {
             // bool isWater = shadowPos.z < texDepth + EPSILON
             //     && shadowPos.z > texDepthTrans + shadowBias;
 
-            bool isWater = texDepthTrans < texDepth - EPSILON;
+            bool isWater = false;//texDepthTrans < texDepth - EPSILON;
 
             //if (i == 0) waterDepth = max(shadowPos.z - texDepthTrans, 0.0) * shadowDistMax;
 
@@ -460,12 +460,12 @@ void main() {
                         //skyLightBrightF *= 1.0 - 0.8 * skyRainStrength;
                         // TODO: make darker at night
 
-                        #if LIGHTING_MODE >= LIGHTING_MODE_FLOODFILL
-                            float skyLightRange = mix(0.5, 8.0, sunUpF) * DynamicLightAmbientF;
+                        #if LIGHTING_MODE == LIGHTING_MODE_FLOODFILL
+                            float skyLightRange = 6.0 * sunUpF * DynamicLightAmbientF;
                         //     // float skyLightRange = mix(1.0, 6.0, sunUpF);
                         //     float skyLightRange = mix(2.0, 4.0, sunUpF);
                         #else
-                            float skyLightRange = mix(4.0, 16.0, sunUpF);
+                            float skyLightRange = 8.0 * sunUpF;
                         //    // float skyLightRange = mix(1.0, 16.0, sunUpF);
                         //     float skyLightRange = mix(1.0, 6.0, sunUpF);
                         #endif
@@ -491,7 +491,7 @@ void main() {
                     }
                 #endif
 
-                float skyLightDistF = sunUpF * 0.75 + 0.25;
+                float skyLightDistF = sunUpF * 0.8 + 0.2;
                 float skyLightFinal = exp2(LPV_SKYLIGHT_RANGE * skyLightDistF * shadowColorF.a) - 1.0;
                 lightValue.a = max(lightValue.a, skyLightFinal);
             #endif
