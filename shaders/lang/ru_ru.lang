@@ -1,4 +1,4 @@
-Provided by ShrikerChestTree(s) v14.0
+Provided by ShrikerChestTree(s) v14.1
 
 (-----INFO-----)
 This is a new kind of Russian translation for the Shrimple shader!
@@ -347,12 +347,12 @@ value.MATERIAL_SSS.0=Выкл
 value.MATERIAL_SSS.1=Интегрированный
 value.MATERIAL_SSS.2=Lab-ФОР
 
-|/////PARALLAX OPTIONS/////|
+|/////DISPLACE OPTIONS/////|
 
-screen.MATERIAL_PARALLAX_OPTIONS=Настройка Вытеснения
-screen.MATERIAL_PARALLAX_OPTIONS.comment=Как смещается глубина каждого пикселя поверхности (СОП).
+screen.MATERIAL_DISPLACE_OPTIONS=Настройка Вытеснения
+screen.MATERIAL_DISPLACE_OPTIONS.comment=Как смещается глубина каждого пикселя поверхности (СОП).
 
-{=====Parallax Mode=====}
+{=====Displace Mode=====}
 
 option.DISPLACE_MODE=Тип
 option.DISPLACE_MODE.comment=Тип СОП для визуализации. Гладкий СОП будет иметь смягчённые края. Острый СОП будут иметь жёсткие, как у модели, края. Тесселяция - делает PBR-текстуры объёмными и более гладкими!.
@@ -367,19 +367,19 @@ value.DISPLACE_MODE.4=Тесселяция
 option.MATERIAL_DISPLACE_DEPTH=Глубина
 suffix.MATERIAL_DISPLACE_DEPTH=%
 
-{=====Displace Offset=====}
+{=====Maximum Distance=====}
 
-option.MATERIAL_DISPLACE_OFFSET=Смещение Поверхности
-suffix.MATERIAL_DISPLACE_OFFSET=%
+option.MATERIAL_DISPLACE_MAX_DIST=Максимальная Дистанция
+option.MATERIAL_DISPLACE_MAX_DIST.comment=Максимальная дистанция (в блоках) от камеры/игрока до отрисовки СОП.
 
-{=====Tessellation Quality=====}
+{=====Parallax Entities=====}
 
-option.MATERIAL_TESSELLATION_QUALITY=Качество Тесселляции
-suffix.MATERIAL_TESSELLATION_QUALITY=раз(-а)
+option.MATERIAL_DISPLACE_ENTITIES=Мобы
+option.MATERIAL_DISPLACE_ENTITIES.comment=Отключите параллакс для мобов, если он вызывает проблемы с рендером в некоторых модах.
 
-{=====Tessellation Edge-Fade=====}
+|/////PARALLAX OPTIONS/////|
 
-option.MATERIAL_TESSELLATION_EDGE_FADE=Затухание-Крёв Тесселляции
+screen.MATERIAL_DISPLACE_POM_OPTIONS=Настройка Параллакса
 
 {=====Parallax Samples=====}
 
@@ -390,10 +390,10 @@ option.MATERIAL_PARALLAX_SAMPLES=Образцы СОП
 option.MATERIAL_PARALLAX_SHADOW_SAMPLES=Теневые Образцы СОП
 value.MATERIAL_PARALLAX_SHADOW_SAMPLES.0=Выкл
 
-{=====Parallax Maximum Distance=====}
+{=====Displace Offset=====}
 
-option.MATERIAL_DISPLACE_MAX_DIST=Расстояние
-option.MATERIAL_DISPLACE_MAX_DIST.comment=Максимальное расстояние (в блоках) от камеры/игрока до отрисовки СОП.
+option.MATERIAL_DISPLACE_OFFSET=Смещение Поверхности
+suffix.MATERIAL_DISPLACE_OFFSET=%
 
 {=====Parallax Sharp Threshold=====}
 
@@ -410,10 +410,23 @@ option.MATERIAL_PARALLAX_SHADOW_SMOOTH.comment=Включает более вы�
 
 option.MATERIAL_PARALLAX_DEPTH_WRITE=Глубина-Записи СОП
 
-{=====Parallax Entities=====}
+|/////TESSELLATION_OPTIONS/////|
 
-option.MATERIAL_DISPLACE_ENTITIES=Мобы
-option.MATERIAL_DISPLACE_ENTITIES.comment=Отключите параллакс для мобов, если он вызывает проблемы с рендером в некоторых модах.
+screen.MATERIAL_DISPLACE_TESS_OPTIONS=Настройки Тесселляции
+
+{=====Tessellation Quality=====}
+
+option.MATERIAL_TESSELLATION_QUALITY=Качество Тесселляции
+suffix.MATERIAL_TESSELLATION_QUALITY=раз(-а)
+
+{=====Tessellation Surface Offset=====}
+
+option.MATERIAL_TESSELLATION_OFFSET=Смещение Поверхности
+suffix.MATERIAL_TESSELLATION_OFFSET=%
+
+{=====Tessellation Edge-Fade=====}
+
+option.MATERIAL_TESSELLATION_EDGE_FADE=Затухание-Крёв Тесселляции
 
 |/////NORMAL MAP OPTIONS/////|
 
