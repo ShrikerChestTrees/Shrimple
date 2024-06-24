@@ -9,7 +9,7 @@ in vec2 texcoord;
 
 uniform sampler2D BUFFER_FINAL;
 
-#if EFFECT_BLOOM_HAND != 100
+#if EFFECT_BLOOM_HAND_STRENGTH != 100
     uniform sampler2D depthtex1;
     uniform sampler2D depthtex2;
 #endif
@@ -31,7 +31,7 @@ uniform float nightVision;
 
 #include "/lib/sampling/ign.glsl"
 #include "/lib/effects/bloom.glsl"
-// #include "/lib/post/tonemap.glsl"
+#include "/lib/post/exposure.glsl"
 
 
 /* RENDERTARGETS: 15 */
@@ -46,26 +46,20 @@ void main() {
 
     vec3 color = BloomBoxSample(BUFFER_FINAL, tex, pixelSize);
         
-    //ApplyPostExposure(color);
+    ApplyPostExposure(color);
 
-    float power = EFFECT_BLOOM_POWER;
-    // if (isEyeInWater == 1) power = 1.0;
+    float brightness = luminance(color);
+    float brightness_new = pow(brightness * EffectBloomBrightnessF, EFFECT_BLOOM_POWER);
+    color *= min(brightness_new / brightness, 1.0);
 
-    //const float lumMax = luminance(vec3(6.0));
-    float brightness = luminance(color);// / lumMax;
-    brightness = brightness / (brightness + 1.0);
-    //float contribution = max(brightness - threshold, 0.0);
-    float contribution = pow(brightness, power);
-    //contribution /= max(brightness, EPSILON);
-    color *= min(contribution, 1.0);
-    color = max(color, 0.0);
-
-    #if EFFECT_BLOOM_HAND != 100
+    #if EFFECT_BLOOM_HAND_STRENGTH != 100
         float depth1 = textureLod(depthtex1, tex, 0).r;
         float depth2 = textureLod(depthtex2, tex, 0).r;
 
         if (depth1 < depth2) color *= Bloom_HandStrength;
     #endif
+
+    color = max(color, 0.0);
 
     DitherBloom(color);
 

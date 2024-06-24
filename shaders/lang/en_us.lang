@@ -133,20 +133,25 @@ value.WORLD_CURVE_RADIUS.0=FLAT
 screen.WATER_OPTIONS=Water
 screen.WATER_OPTIONS.comment=Options for water blocks.
 
+option.WATER_VOL_FOG_TYPE=Volumetric Fog
+value.WATER_VOL_FOG_TYPE.0=None
+value.WATER_VOL_FOG_TYPE.1=Fast
+value.WATER_VOL_FOG_TYPE.2=Fancy
+
+option.WATER_TEXTURED=Texture
+
+option.WATER_OPACITY=Opacity
+option.WATER_OPACITY.comment=How transparent the water surface will be.
+suffix.WATER_OPACITY=%
+
 option.WATER_COLOR_TYPE=Color
 value.WATER_COLOR_TYPE.0=Automatic
 value.WATER_COLOR_TYPE.1=Default
 value.WATER_COLOR_TYPE.2=Tropical
 value.WATER_COLOR_TYPE.3=Swamp
 
-option.WATER_TEXTURED=Texture
-
-option.WATER_VOL_FOG_TYPE=Volumetric Fog
-value.WATER_VOL_FOG_TYPE.0=None
-value.WATER_VOL_FOG_TYPE.1=Fast
-value.WATER_VOL_FOG_TYPE.2=Fancy
-
 option.WATER_FOG_DENSITY=Density
+option.WATER_FOG_DENSITY.comment=How dense/transparent water fog will be.
 suffix.WATER_FOG_DENSITY=%
 
 option.WATER_DEPTH_LAYERS=Depth Layers
@@ -663,17 +668,17 @@ option.EFFECT_BLOOM_STRENGTH=Strength
 option.EFFECT_BLOOM_STRENGTH.comment=The amount of bloom to apply to the final scene. Set to zero to disable.
 suffix.EFFECT_BLOOM_STRENGTH=%
 
+option.EFFECT_BLOOM_HAND_STRENGTH=Hand Strength
+option.EFFECT_BLOOM_HAND_STRENGTH.comment=Determines the strength of bloom from in-hand items/blocks.
+suffix.EFFECT_BLOOM_HAND_STRENGTH=%
+
+option.EFFECT_BLOOM_BRIGHT=Brightness
+option.EFFECT_BLOOM_BRIGHT.comment=The multiplier applied to input brightness.
+suffix.EFFECT_BLOOM_BRIGHT=%
+
 option.EFFECT_BLOOM_POWER=Power
 option.EFFECT_BLOOM_POWER.comment=The curve applied to brightness. Higher values will reduce bloom in darker areas.
 suffix.EFFECT_BLOOM_POWER=x
-
-option.EFFECT_BLOOM_THRESHOLD=Threshold
-option.EFFECT_BLOOM_THRESHOLD.comment=The brightness threshold light needs to exceed to contribute to bloom.
-suffix.EFFECT_BLOOM_THRESHOLD=%
-
-option.EFFECT_BLOOM_HAND=Hand Strength
-option.EFFECT_BLOOM_HAND.comment=Determines the strength of bloom from in-hand items/blocks.
-suffix.EFFECT_BLOOM_HAND=%
 
 
 screen.EFFECT_BLUR_OPTIONS=Blur
