@@ -1,4 +1,4 @@
-Provided by ShrikerChestTree(s) v14.1
+Provided by ShrikerChestTree(s) v14.2
 
 (-----INFO-----)
 This is a new kind of Russian translation for the Shrimple shader!
@@ -221,6 +221,23 @@ value.WORLD_CURVE_RADIUS.0=ПЛОСКИЙ
 screen.WATER_OPTIONS=Настройка Воды
 screen.WATER_OPTIONS.comment=Настройка для воды.
 
+{=====Water Volumetric Fog Type=====}
+
+option.WATER_VOL_FOG_TYPE=Тип Объёмного Тумана
+value.WATER_VOL_FOG_TYPE.0=Никакой
+value.WATER_VOL_FOG_TYPE.1=Быстрый
+value.WATER_VOL_FOG_TYPE.2=Детальный
+
+{=====Textured=====}
+
+option.WATER_TEXTURED=Текстура
+
+{=====Opacity=====}
+
+option.WATER_OPACITY=Прозрачность
+option.WATER_OPACITY.comment=Насколько прозрачной будет поверхность воды.
+suffix.WATER_OPACITY=%
+
 {=====Color=====}
 
 option.WATER_COLOR_TYPE=Цвет
@@ -228,10 +245,6 @@ value.WATER_COLOR_TYPE.0=Автоматический
 value.WATER_COLOR_TYPE.1=Обычный
 value.WATER_COLOR_TYPE.2=Тропический
 value.WATER_COLOR_TYPE.3=Болотный
-
-{=====Textured=====}
-
-option.WATER_TEXTURED=Текстура
 
 {=====Wave Size=====}
 
@@ -246,17 +259,10 @@ value.WATER_WAVE_SIZE.3=Большие
 option.WATER_WAVE_DETAIL=Детальность Волн
 suffix.WATER_WAVE_DETAIL=раз(-а)
 
-
-{=====Water Volumetric Fog Type=====}
-
-option.WATER_VOL_FOG_TYPE=Тип Объёмного Тумана
-value.WATER_VOL_FOG_TYPE.0=Никакой
-value.WATER_VOL_FOG_TYPE.1=Быстрый
-value.WATER_VOL_FOG_TYPE.2=Детальный
-
 {=====Water Fog=====}
 
 option.WATER_FOG_DENSITY=Плотность Тумана
+option.WATER_FOG_DENSITY.comment=Насколько плотным/прозрачным будет водный туман.
 suffix.WATER_FOG_DENSITY=%
 
 {=====Water Depth Layers=====}
@@ -1048,6 +1054,8 @@ suffix.EFFECT_BLOOM_POWER=раз(-а)
 option.EFFECT_BLOOM_THRESHOLD=Порог
 option.EFFECT_BLOOM_THRESHOLD.comment=Порог яркости, который должен превысить свет, чтобы способствовать блюму.
 suffix.EFFECT_BLOOM_THRESHOLD=%
+
+{=====Hand Strength=====}
 
 option.EFFECT_BLOOM_HAND_STRENGTH=Сила от Руки
 option.EFFECT_BLOOM_HAND_STRENGTH.comment=Сила блюма от находящихся в руках предметов/блоков.
