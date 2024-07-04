@@ -1,4 +1,4 @@
-Provided by ShrikerChestTree(s) v14.2
+Provided by ShrikerChestTree(s) v14.3
 
 (-----INFO-----)
 This is a new kind of Russian translation for the Shrimple shader!
@@ -85,11 +85,16 @@ value.SKY_CLOUD_TYPE.1=Ванильные
 value.SKY_CLOUD_TYPE.2=Детальные
 value.SKY_CLOUD_TYPE.3=Кубические
 
-{=====Cloud Speed=====}
+{=====Speed=====}
 
-option.SKY_CLOUD_SPEED=Скорость Облаков
+option.SKY_CLOUD_SPEED=Скорость
 option.SKY_CLOUD_SPEED.comment=Скорость перемещения облаков по небу/изменения. Влияет только на "детальные" облака.
 suffix.SKY_CLOUD_SPEED=раз(-а)
+
+{=====Opacity=====}
+
+option.SKY_CLOUD_OPACITY=Прозрачность
+suffix.SKY_CLOUD_OPACITY=%
 
 {=====Cloud Coverage Minimum=====}
 
@@ -232,9 +237,9 @@ value.WATER_VOL_FOG_TYPE.2=Детальный
 
 option.WATER_TEXTURED=Текстура
 
-{=====Opacity=====}
+{=====Surface Opacity=====}
 
-option.WATER_OPACITY=Прозрачность
+option.WATER_OPACITY=Прозрачность Поверхности
 option.WATER_OPACITY.comment=Насколько прозрачной будет поверхность воды.
 suffix.WATER_OPACITY=%
 
@@ -259,9 +264,9 @@ value.WATER_WAVE_SIZE.3=Большие
 option.WATER_WAVE_DETAIL=Детальность Волн
 suffix.WATER_WAVE_DETAIL=раз(-а)
 
-{=====Water Fog=====}
+{=====Volume Density=====}
 
-option.WATER_FOG_DENSITY=Плотность Тумана
+option.WATER_FOG_DENSITY=Объём Плотности
 option.WATER_FOG_DENSITY.comment=Насколько плотным/прозрачным будет водный туман.
 suffix.WATER_FOG_DENSITY=%
 
@@ -1221,14 +1226,16 @@ value.DEBUG_VIEW.5=Отложенная Тень
 value.DEBUG_VIEW.6=Отложенный Туман
 value.DEBUG_VIEW.7=Отложенный tex-Нормал
 value.DEBUG_VIEW.8=Отложенный Грубый/Металл
-value.DEBUG_VIEW.9=Отложенный ОО
-value.DEBUG_VIEW.10=Отложенная Диффузия
-value.DEBUG_VIEW.11=Отложенное Спекулярное Отражение
-value.DEBUG_VIEW.12=Скорость
-value.DEBUG_VIEW.13=Цветная Тень
-value.DEBUG_VIEW.14=Плита Блюма
-value.DEBUG_VIEW.15=Плита Плотности
-value.DEBUG_VIEW.16=Белый-Мир
+value.DEBUG_VIEW.9=Отложенный Разброс ОО (VL)
+value.DEBUG_VIEW.10=Отложенная Передача ОО (VL)
+value.DEBUG_VIEW.11=Отложенная Диффузия
+value.DEBUG_VIEW.12=Отложенное Спекулярное Отражение
+value.DEBUG_VIEW.13=Скорость
+value.DEBUG_VIEW.14=Цветная Тень
+value.DEBUG_VIEW.15=Плита Блюма
+value.DEBUG_VIEW.16=Плита Плотности
+value.DEBUG_VIEW.17=Облучение Неба
+value.DEBUG_VIEW.18=Белый-Мир
 
 {=====Debug Translucent=====}
 
