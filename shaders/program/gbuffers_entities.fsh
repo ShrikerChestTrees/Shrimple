@@ -42,6 +42,20 @@ uniform sampler2D gtexture;
 uniform sampler2D lightmap;
 uniform sampler2D noisetex;
 
+#ifdef WORLD_SKY_ENABLED
+    #if LIGHTING_MODE != LIGHTING_MODE_NONE
+        uniform sampler2D texSkyIrradiance;
+    #endif
+
+    #if MATERIAL_REFLECTIONS != REFLECT_NONE && !defined DEFERRED_BUFFER_ENABLED
+        uniform sampler2D texSky;
+    #endif
+#endif
+
+#if defined PARALLAX_ENABLED && defined MATERIAL_PARALLAX_DEPTH_WRITE
+    layout (depth_greater) out float gl_FragDepth;
+#endif
+
 #if MATERIAL_NORMALS != NORMALMAP_NONE || defined PARALLAX_ENABLED
     uniform sampler2D normals;
 #endif
@@ -191,6 +205,7 @@ uniform ivec2 eyeBrightnessSmooth;
 #include "/lib/sampling/noise.glsl"
 #include "/lib/sampling/bayer.glsl"
 #include "/lib/sampling/ign.glsl"
+#include "/lib/sampling/erp.glsl"
 
 #include "/lib/utility/anim.glsl"
 #include "/lib/utility/lightmap.glsl"
@@ -215,6 +230,10 @@ uniform ivec2 eyeBrightnessSmooth;
 
 #if SKY_TYPE == SKY_TYPE_CUSTOM
     #include "/lib/fog/fog_custom.glsl"
+    
+    #ifdef WORLD_WATER_ENABLED
+        #include "/lib/fog/fog_water_custom.glsl"
+    #endif
 #elif SKY_TYPE == SKY_TYPE_VANILLA
     #include "/lib/fog/fog_vanilla.glsl"
 #endif

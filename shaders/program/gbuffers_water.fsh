@@ -17,7 +17,7 @@ in VertexData {
     flat int blockId;
     flat mat2 atlasBounds;
 
-    #if defined WATER_TESSELLATION_ENABLED || WATER_WAVE_SIZE > 0
+    #if defined WORLD_WATER_ENABLED && (defined WATER_TESSELLATION_ENABLED || WATER_WAVE_SIZE > 0)
         vec3 surfacePos;
     #endif
 
@@ -46,6 +46,16 @@ in VertexData {
 uniform sampler2D gtexture;
 uniform sampler2D lightmap;
 uniform sampler2D noisetex;
+
+#ifdef WORLD_SKY_ENABLED
+    #if LIGHTING_MODE != LIGHTING_MODE_NONE
+        uniform sampler2D texSkyIrradiance;
+    #endif
+
+    #if MATERIAL_REFLECTIONS != REFLECT_NONE && !defined DEFERRED_BUFFER_ENABLED
+        uniform sampler2D texSky;
+    #endif
+#endif
 
 #if MATERIAL_NORMALS != NORMALMAP_NONE || defined PARALLAX_ENABLED
     uniform sampler2D normals;
@@ -224,7 +234,9 @@ uniform int heldBlockLightValue2;
 #include "/lib/sampling/atlas.glsl"
 #include "/lib/sampling/depth.glsl"
 #include "/lib/sampling/ign.glsl"
+#include "/lib/sampling/erp.glsl"
 
+#include "/lib/utility/hsv.glsl"
 #include "/lib/utility/anim.glsl"
 #include "/lib/utility/lightmap.glsl"
 #include "/lib/utility/tbn.glsl"
@@ -262,6 +274,10 @@ uniform int heldBlockLightValue2;
 
 #if SKY_TYPE == SKY_TYPE_CUSTOM
     #include "/lib/fog/fog_custom.glsl"
+    
+    #ifdef WORLD_WATER_ENABLED
+        #include "/lib/fog/fog_water_custom.glsl"
+    #endif
 #elif SKY_TYPE == SKY_TYPE_VANILLA
     #include "/lib/fog/fog_vanilla.glsl"
 #endif
@@ -354,7 +370,6 @@ uniform int heldBlockLightValue2;
 
     #if defined IS_LPV_ENABLED && (LIGHTING_MODE > LIGHTING_MODE_BASIC || defined IS_LPV_SKYLIGHT_ENABLED)
         #include "/lib/buffers/volume.glsl"
-        #include "/lib/utility/hsv.glsl"
         
         #include "/lib/lpv/lpv.glsl"
         #include "/lib/lpv/lpv_render.glsl"
@@ -368,7 +383,7 @@ uniform int heldBlockLightValue2;
         #include "/lib/lighting/reflections.glsl"
     #endif
 
-    #ifdef WORLD_SKY_ENABLED
+    #if defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
         #include "/lib/lighting/sky_lighting.glsl"
     #endif
 

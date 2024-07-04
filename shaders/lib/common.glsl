@@ -9,13 +9,11 @@ const int colortex2Format  = RGBA8;
 const int colortex3Format  = RGBA32UI;
 const int colortex4Format  = RGB16F;
 const int colortex5Format  = RGBA16F;
-const int colortex6Format  = R32F;
 const int colortex7Format  = RGBA16F;
 const int colortex8Format = RGB16F;
 const int colortex9Format = RGB8;
 const int colortex10Format = RGB16F;
 const int colortex11Format = RGBA16F;
-const int colortex12Format = RGB16F;
 const int colortex15Format = RGBA16F;
 */
 
@@ -46,8 +44,8 @@ const bool colortex4Clear = false;
 const vec4 colortex5ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
 const bool colortex5Clear = false;
 
-const vec4 colortex6ClearColor = vec4(1.0, 1.0, 1.0, 1.0);
-const bool colortex6Clear = false;
+// const vec4 colortex6ClearColor = vec4(1.0, 1.0, 1.0, 1.0);
+// const bool colortex6Clear = false;
 
 const vec4 colortex7ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
 const bool colortex7Clear = true;
@@ -64,8 +62,8 @@ const bool colortex10Clear = true;
 const vec4 colortex11ClearColor = vec4(0.0, 0.0, 0.0, 1.0);
 const bool colortex11Clear = false;
 
-const vec4 colortex12ClearColor = vec4(0.0, 0.0, 0.0, 1.0);
-const bool colortex12Clear = false;
+// const vec4 colortex12ClearColor = vec4(0.0, 0.0, 0.0, 1.0);
+// const bool colortex12Clear = false;
 
 const vec4 colortex15ClearColor = vec4(0.0, 0.0, 0.0, 0.0);
 const bool colortex15Clear = true;
@@ -75,13 +73,14 @@ const bool colortex15Clear = true;
 #define SKY_TYPE 1 // [0 1]
 #define SKY_SUN_BRIGHTNESS 400  // [10 20 30 40 50 60 70 80 90 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 800]
 #define SKY_MOON_BRIGHTNESS 10 // [1 2 4 6 8 10 12 14 16 18 20 25 30 40 50 60 70 80 90 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400]
-#define SKY_BRIGHTNESS 400  // [10 20 30 40 50 60 70 80 90 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 800]
+#define SKY_BRIGHTNESS 800  // [10 20 30 40 50 60 70 80 90 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 800 850 900 950 1000 1100 1200]
 #define SKY_WEATHER_OPACITY 60 // [0 2 4 6 8 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define SKY_WEATHER_CLOUD_ONLY
 
 // Sky Cloud Options
 #define SKY_CLOUD_TYPE 1 // [0 1 2]
 #define SKY_CLOUD_SPEED 24 // [0 2 4 8 12 16 20 24 32 48 64 96 128]
+#define SKY_CLOUD_OPACITY 100 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 105 110 115 120 125 130 135 140 145 150 155 160 165 170 175 180 185 190 195 200]
 #define SKY_CLOUD_COVER_MIN 25 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define SKY_CLOUD_COVER_MAX 55 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define SKY_CLOUD_ALTITUDE 0 // [0 20 40 60 80 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 750 800 850 900 950 1000 1100 1200]
@@ -115,13 +114,13 @@ const bool colortex15Clear = true;
 // Water Options
 //#define WATER_TEXTURED
 #define WATER_COLOR_TYPE 0 // [0 1 2 3]
-#define WATER_OPACITY 0 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
+#define WATER_OPACITY 20 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define WATER_SURFACE_PIXEL_RES 0 // [0 8 16 32 64 128]
 #define WATER_VOL_FOG_TYPE 2 // [0 1 2]
-#define WATER_FOG_DENSITY 100 // [10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 320 340 360 380 400 500 600]
-#define WATER_TESSELLATION_QUALITY 0 // [0 4 8 12 16 20 24 28 32]
+#define WATER_FOG_DENSITY 50 // [10 20 30 40 50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 320 340 360 380 400 500 600]
+#define WATER_TESSELLATION_QUALITY 4 // [0 2 4 6 8 12 16 20 24 28 32]
 #define WATER_WAVE_SIZE 2 // [0 1 2 3]
-#define WATER_WAVE_DETAIL 20 // [10 12 14 16 18 20 24 28 32 36 40 44 48]
+#define WATER_WAVE_DETAIL 16 // [10 12 14 16 18 20 24 28 32 36 40 44 48]
 #define WATER_WAVE_DETAIL_VERTEX 12
 // #define WATER_WAVE_SHARP 50 // [5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define WATER_DEPTH_LAYERS 1 // [1 2 3 4 5 6]
@@ -219,7 +218,7 @@ const bool colortex15Clear = true;
 #define LIGHTING_MODE 1 // [0 1 2 3]
 #define LIGHTING_MODE_HAND 1 // [0 1 2]
 #define LIGHTING_BRIGHTNESS 400 // [20 40 60 80 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 650 700 750 800]
-#define LIGHTING_AMBIENT 50 // [0 2 4 6 8 10 12 14 16 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
+#define LIGHTING_AMBIENT 40 // [0 2 4 6 8 10 12 14 16 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define LIGHTING_MIN 0.6 // [0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.7 0.8 0.9 1.0 1.1 1.2 1.3 1.4 1.5 1.6 1.8 2.0 2.2 2.4 2.6 2.8 3.0]
 #define LIGHTING_RANGE 100 // [5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100 105 110 115 120 125 130 135 140 145 150 155 160 165 170 175 180 185 190 195 200 210 220 230 240 250 260 270 280 290 300]
 #define LIGHTING_FLICKER
@@ -311,13 +310,14 @@ const bool colortex15Clear = true;
 #define EFFECT_SSAO_ENABLED
 #define EFFECT_SSAO_SAMPLES 12 // [2 4 6 8 10 12 14 16 24 32]
 #define EFFECT_SSAO_RADIUS 1.5 // [0.5 1.0 1.5 2.0 2.5 3.0 3.5 4.0]
-#define EFFECT_SSAO_STRENGTH 6 // [1 2 3 4 5 6 7 8 9 10 12 14 16 18 20 24 28 32]
+#define EFFECT_SSAO_STRENGTH 9 // [1 2 3 4 5 6 7 8 9 10 12 14 16 18 20 24 28 32]
 #define EFFECT_SSAO_MIN 0.0
 #define EFFECT_SSAO_BIAS 0.04
 
 #define EFFECT_TAA_ENABLED
 #define EFFECT_TAA_MAX_ACCUM 8 // [4 6 8 10 12 16 20 24 28 32 48 64]
 #define EFFECT_TAA_SHARPEN
+//#define EFFECT_TAA_ACCUM
 
 //#define EFFECT_FXAA_ENABLED
 #define EFFECT_FXAA_ITERATIONS 12 // [4 8 12 16 20 24]
@@ -328,14 +328,14 @@ const bool colortex15Clear = true;
 #define POST_BRIGHTNESS 100 // [0 10 20 30 40 50 60 70 75 80 85 90 95 100 105 110 115 120 125 130 140 150 160 170 180 190 200 220 240 260 280 300]
 #define POST_SATURATION 100 // [0 10 20 30 40 50 60 70 75 80 82 84 86 88 90 92 94 96 98 100 102 104 106 108 110 112 114 116 118 120 125 130 140 150 160 170 180 190 200]
 #define POST_CONTRAST 100 // [80 85 90 92 94 96 98 100 102 104 106 108 110 115 120]
-#define POST_TEMP 78 // [10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 52 54 56 58 60 62 64 66 68 70 72 74 76 78 80 82 84 86 88 90 92 94 96 98 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400]
-#define GAMMA_OUT 2.0 // [0.6 0.8 1.0 1.2 1.4 1.6 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.8 3.0 3.4 3.8 4.2 4.6 5.0 6.0 7.0 8.0]
+#define POST_TEMP 52 // [10 12 14 16 18 20 22 24 26 28 30 32 34 36 38 40 42 44 46 48 50 52 54 56 58 60 62 64 66 68 70 72 74 76 78 80 82 84 86 88 90 92 94 96 98 100 120 140 160 180 200 220 240 260 280 300 320 340 360 380 400]
+#define GAMMA_OUT 2.2 // [0.6 0.8 1.0 1.2 1.4 1.6 1.8 1.9 2.0 2.1 2.2 2.3 2.4 2.5 2.6 2.8 3.0 3.4 3.8 4.2 4.6 5.0 6.0 7.0 8.0]
 #define POST_WHITE_POINT 300 // [50 60 70 80 90 100 110 120 130 140 150 160 170 180 190 200 220 240 260 280 300 320 340 360 380 400 450 500 550 600 700 800 900]
 #define POST_EXPOSURE -1.4 // [-6.0 -5.5 -5.0 -4.5 -4.0 -3.5 -3.0 -2.8 -2.6 -2.4 -2.2 -2.0 -1.8 -1.6 -1.4 -1.2 -1.0 -0.8 -0.6 -0.5 -0.4 -0.3 -0.2 -0.1 0.0 0.1 0.2 0.3 0.4 0.5 0.6 0.8 1.0 1.2 1.4 1.6 1.8 2.0]
 
 
 // Debug Options
-#define DEBUG_VIEW 0 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17]
+#define DEBUG_VIEW 0 // [0 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18]
 //#define DEBUG_TRANSPARENT
 #define DH_CLIP_DIST 70 // [0 5 10 15 20 25 30 35 40 45 50 55 60 65 70 75 80 85 90 95 100]
 #define DH_TRANSITION
@@ -456,7 +456,7 @@ const bool colortex15Clear = true;
     #define PARALLAX_ENABLED
 #endif
 
-#if WATER_TESSELLATION_QUALITY > 0 && WATER_WAVE_SIZE > 0 && defined IRIS_FEATURE_SSBO
+#if WATER_TESSELLATION_QUALITY > 0 && WATER_WAVE_SIZE > 0 && defined IRIS_FEATURE_TESSELATION_SHADERS
 	#define WATER_TESSELLATION_ENABLED
 #endif
 
@@ -562,6 +562,7 @@ const float Sky_SunBrightnessF = SKY_SUN_BRIGHTNESS * 0.01;
 const float Sky_MoonBrightnessF = SKY_MOON_BRIGHTNESS * 0.01;
 const float Sky_BrightnessF = SKY_BRIGHTNESS * 0.01;
 const float Sky_RainOpacityF = SKY_WEATHER_OPACITY * 0.01;
+const float SkyCloudOpacityF = SKY_CLOUD_OPACITY * 0.01;
 const float Water_DensityF = WATER_FOG_DENSITY * 0.01;
 const float Water_OpacityF = WATER_OPACITY * 0.01;
 const float World_CurveRadius = WORLD_CURVE_RADIUS * 1000.0;

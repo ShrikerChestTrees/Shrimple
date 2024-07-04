@@ -177,6 +177,7 @@ uniform int frameCounter;
 #include "/lib/sampling/ign.glsl"
 #include "/lib/sampling/noise.glsl"
 
+#include "/lib/utility/hsv.glsl"
 #include "/lib/utility/anim.glsl"
 #include "/lib/utility/lightmap.glsl"
 
@@ -202,6 +203,10 @@ uniform int frameCounter;
 
 #if SKY_TYPE == SKY_TYPE_CUSTOM
     #include "/lib/fog/fog_custom.glsl"
+    
+    #ifdef WORLD_WATER_ENABLED
+        #include "/lib/fog/fog_water_custom.glsl"
+    #endif
 #elif SKY_TYPE == SKY_TYPE_VANILLA
     #include "/lib/fog/fog_vanilla.glsl"
 #endif
@@ -263,17 +268,20 @@ uniform int frameCounter;
 
     #ifdef IS_LPV_ENABLED
         #include "/lib/buffers/volume.glsl"
-        #include "/lib/utility/hsv.glsl"
 
         #include "/lib/lpv/lpv.glsl"
         #include "/lib/lpv/lpv_render.glsl"
     #endif
     
-    #if MATERIAL_REFLECTIONS != REFLECT_NONE
-        #include "/lib/lighting/reflections.glsl"
-    #endif
+    #if LIGHTING_MODE != LIGHTING_MODE_NONE
+        #if MATERIAL_REFLECTIONS != REFLECT_NONE
+            #include "/lib/lighting/reflections.glsl"
+        #endif
 
-    #include "/lib/lighting/sky_lighting.glsl"
+        #ifdef WORLD_SKY_ENABLED
+            #include "/lib/lighting/sky_lighting.glsl"
+        #endif
+    #endif
 
     #if LIGHTING_MODE == LIGHTING_MODE_TRACED
         #include "/lib/lighting/traced.glsl"

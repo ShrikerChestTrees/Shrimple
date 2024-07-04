@@ -23,33 +23,62 @@ vec3 decodePalYuv(vec3 yuv) {
 
 
 vec4 ApplyTAA(const in vec2 uv) {
-    float depth = textureLod(depthtex1, uv, 0).r;
-    vec3 velocity = textureLod(BUFFER_VELOCITY, texcoord, 0).xyz;
-    vec2 uvLast = getReprojectedClipPos(texcoord, depth, velocity, false).xy;
+    vec2 unjitterCoord = uv;
+    unjitterCoord -= 0.5*getJitterOffset(frameCounter);
+    //unjitterCoord += 0.5*getJitterOffset(frameCounter-1);
+
+    float depth = textureLod(depthtex1, unjitterCoord, 0).r;
+    bool isDhDepth = false;
+
+    #ifdef DISTANT_HORIZONS
+        float dhDepth = textureLod(dhDepthTex1, unjitterCoord, 0).r;
+
+        float depthL = linearizeDepthFast(depth, near, farPlane);
+        float dhDepthL = linearizeDepthFast(dhDepth, dhNearPlane, dhFarPlane);
+
+        if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {
+            depth = dhDepth;
+            //depthL = dhDepthL;
+            isDhDepth = true;
+        }
+    #endif
+
+    vec3 velocity = textureLod(BUFFER_VELOCITY, unjitterCoord, 0).xyz;
+    vec2 uvLast = getReprojectedClipPos(uv, depth, velocity, isDhDepth).xy;
 
     #ifdef EFFECT_TAA_SHARPEN
         vec4 lastColor = sampleHistoryCatmullRom(uvLast);
     #else
         vec4 lastColor = textureLod(BUFFER_FINAL_PREV, uvLast, 0);
     #endif
-    
+
     vec3 antialiased = lastColor.rgb;
-    float mixRate = min(lastColor.a, 0.5);
+    // float mixRate = min(lastColor.a, 0.5);
+    float mixRate = clamp(lastColor.a, EPSILON, 0.5);
+    // #ifdef EFFECT_TAA_ACCUM
+    //     mixRate = 0.0;
+    // #endif
+
+    if (saturate(uvLast) != uvLast)
+        mixRate = 1.0;
     
-    vec2 off = pixelSize;// 1.0 / iResolution.xy;
     vec3 in0 = textureLod(BUFFER_FINAL, uv, 0).rgb;
+    // return vec4(in0, 1.0);
+    // return vec4(lastColor.rgb, 1.0);
     
     antialiased = mix(antialiased * antialiased, in0 * in0, mixRate);
     antialiased = sqrt(antialiased);
+
+    // vec2 pixelSize = rcp(vec2(viewWidth, viewHeight));
     
-    vec3 in1 = textureLod(BUFFER_FINAL, uv + vec2(+off.x, 0.0), 0).rgb;
-    vec3 in2 = textureLod(BUFFER_FINAL, uv + vec2(-off.x, 0.0), 0).rgb;
-    vec3 in3 = textureLod(BUFFER_FINAL, uv + vec2(0.0, +off.y), 0).rgb;
-    vec3 in4 = textureLod(BUFFER_FINAL, uv + vec2(0.0, -off.y), 0).rgb;
-    vec3 in5 = textureLod(BUFFER_FINAL, uv + vec2(+off.x, +off.y), 0).rgb;
-    vec3 in6 = textureLod(BUFFER_FINAL, uv + vec2(-off.x, +off.y), 0).rgb;
-    vec3 in7 = textureLod(BUFFER_FINAL, uv + vec2(+off.x, -off.y), 0).rgb;
-    vec3 in8 = textureLod(BUFFER_FINAL, uv + vec2(-off.x, -off.y), 0).rgb;
+    vec3 in1 = textureLod(BUFFER_FINAL, uv + vec2(+pixelSize.x, 0.0), 0).rgb;
+    vec3 in2 = textureLod(BUFFER_FINAL, uv + vec2(-pixelSize.x, 0.0), 0).rgb;
+    vec3 in3 = textureLod(BUFFER_FINAL, uv + vec2(0.0, +pixelSize.y), 0).rgb;
+    vec3 in4 = textureLod(BUFFER_FINAL, uv + vec2(0.0, -pixelSize.y), 0).rgb;
+    vec3 in5 = textureLod(BUFFER_FINAL, uv + vec2(+pixelSize.x, +pixelSize.y), 0).rgb;
+    vec3 in6 = textureLod(BUFFER_FINAL, uv + vec2(-pixelSize.x, +pixelSize.y), 0).rgb;
+    vec3 in7 = textureLod(BUFFER_FINAL, uv + vec2(+pixelSize.x, -pixelSize.y), 0).rgb;
+    vec3 in8 = textureLod(BUFFER_FINAL, uv + vec2(-pixelSize.x, -pixelSize.y), 0).rgb;
     
     antialiased = encodePalYuv(antialiased);
     in0 = encodePalYuv(in0);
@@ -72,9 +101,14 @@ vec4 ApplyTAA(const in vec2 uv) {
        max(max(max(in5, in6), max(in7, in8)), maxColor), 0.5);
     
    	vec3 preclamping = antialiased;
-    antialiased = clamp(antialiased, minColor, maxColor);
+    vec3 clamped = clamp(antialiased, minColor, maxColor);
+    #ifdef EFFECT_TAA_ACCUM
+        antialiased = mix(antialiased, clamped, mixRate);
+    #else
+        antialiased = clamped;
+    #endif
     
-    mixRate = rcp(1.0 / mixRate + 1.0);
+    mixRate = rcp(rcp(mixRate) + 1.0);
     
     vec3 diff = antialiased - preclamping;
     float clampAmount = dot(diff, diff);

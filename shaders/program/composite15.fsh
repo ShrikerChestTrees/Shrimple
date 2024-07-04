@@ -25,6 +25,10 @@ in vec2 texcoord;
         uniform sampler2D texDepthNear;
     #endif
 
+    #if MATERIAL_REFLECTIONS != REFLECT_NONE && defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
+        uniform sampler2D texSky;
+    #endif
+
     #if defined VL_BUFFER_ENABLED || SKY_CLOUD_TYPE > CLOUDS_VANILLA
         uniform sampler2D BUFFER_VL_SCATTER;
         uniform sampler2D BUFFER_VL_TRANSMIT;
@@ -122,6 +126,7 @@ in vec2 texcoord;
     #include "/lib/sampling/noise.glsl"
     #include "/lib/sampling/bayer.glsl"
     #include "/lib/sampling/ign.glsl"
+    #include "/lib/sampling/erp.glsl"
 
     #include "/lib/lighting/hg.glsl"
     #include "/lib/lighting/scatter_transmit.glsl"
@@ -144,6 +149,10 @@ in vec2 texcoord;
 
     #if SKY_TYPE == SKY_TYPE_CUSTOM
         #include "/lib/fog/fog_custom.glsl"
+        
+        #ifdef WORLD_WATER_ENABLED
+            #include "/lib/fog/fog_water_custom.glsl"
+        #endif
     #elif SKY_TYPE == SKY_TYPE_VANILLA
         #include "/lib/fog/fog_vanilla.glsl"
     #endif
@@ -431,7 +440,7 @@ layout(location = 0) out vec4 outFinal;
 
                         vec3 vlLight = phaseIso * WorldSkyLightColor + WaterAmbientF * skyColorFinal;
                     #else
-                        vec3 vlLight = phaseIso + WaterAmbientF;
+                        vec3 vlLight = vec3(phaseIso + WaterAmbientF);
                     #endif
 
                     ApplyScatteringTransmission(final.rgb, waterDist, vlLight, WaterDensityF, WaterScatterF, WaterAbsorbF, 8);

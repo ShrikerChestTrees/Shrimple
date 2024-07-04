@@ -174,13 +174,15 @@ uniform ivec2 eyeBrightnessSmooth;
 #endif
 
 #ifdef WORLD_SKY_ENABLED
-    //#if SKY_VOL_FOG_TYPE == VOL_TYPE_FANCY || WATER_VOL_FOG_TYPE == VOL_TYPE_FANCY
-        #if SKY_TYPE == SKY_TYPE_CUSTOM
-            #include "/lib/fog/fog_custom.glsl"
-        #elif SKY_TYPE == SKY_TYPE_VANILLA
-            #include "/lib/fog/fog_vanilla.glsl"
+    #if SKY_TYPE == SKY_TYPE_CUSTOM
+        #include "/lib/fog/fog_custom.glsl"
+
+        #ifdef WORLD_WATER_ENABLED
+            #include "/lib/fog/fog_water_custom.glsl"
         #endif
-    //#endif
+    #elif SKY_TYPE == SKY_TYPE_VANILLA
+        #include "/lib/fog/fog_vanilla.glsl"
+    #endif
 
     #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
         #include "/lib/clouds/cloud_custom.glsl"
@@ -404,8 +406,8 @@ void main() {
                     // if (cloudDistFar - cloudDistNear > EPSILON)
                     //     _TraceClouds(scatterFinal, transmitFinal, cameraPosition, localViewDir, cloudDistNear, cloudDistFar, cloudSampleCount, CLOUD_SHADOW_STEPS);
 
-                    // if (skyDistFar - cloudDistFar > EPSILON)
-                    //     TraceCloudSky(scatterFinal, transmitFinal, cameraPosition, localViewDir, cloudDistFar, skyDistFar, VOLUMETRIC_SAMPLES/2, CLOUD_SHADOW_STEPS);
+                    if (skyDistFar - cloudDistFar > EPSILON)
+                        TraceCloudSky(scatterFinal, transmitFinal, cameraPosition, localViewDir, cloudDistFar, skyDistFar, VOLUMETRIC_SAMPLES/2, CLOUD_SHADOW_STEPS);
                 #elif SKY_VOL_FOG_TYPE == VOL_TYPE_FAST
                     float skyDistFar = SkyFar;
                     if (depthTrans < 1.0) {

@@ -24,6 +24,14 @@ uniform sampler2D BUFFER_BLOCK_DIFFUSE;
 uniform sampler2D BUFFER_OVERLAY;
 uniform sampler2D TEX_LIGHTMAP;
 
+#if defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
+    uniform sampler2D texSkyIrradiance;
+
+    #if MATERIAL_REFLECTIONS != REFLECT_NONE
+        uniform sampler2D texSky;
+    #endif
+#endif
+
 #if MATERIAL_SPECULAR != SPECULAR_NONE
     uniform sampler2D BUFFER_BLOCK_SPECULAR;
 #endif
@@ -181,6 +189,7 @@ uniform int heldBlockLightValue2;
 #include "/lib/sampling/noise.glsl"
 #include "/lib/sampling/bayer.glsl"
 #include "/lib/sampling/ign.glsl"
+#include "/lib/sampling/erp.glsl"
 #include "/lib/sampling/gaussian.glsl"
 // #include "/lib/sampling/bilateral_gaussian.glsl"
 
@@ -210,6 +219,10 @@ uniform int heldBlockLightValue2;
 
 #if SKY_TYPE == SKY_TYPE_CUSTOM
     #include "/lib/fog/fog_custom.glsl"
+    
+    #ifdef WORLD_WATER_ENABLED
+        #include "/lib/fog/fog_water_custom.glsl"
+    #endif
 #elif SKY_TYPE == SKY_TYPE_VANILLA
     #include "/lib/fog/fog_vanilla.glsl"
 #endif
@@ -754,46 +767,46 @@ layout(location = 0) out vec4 outFinal;
             #ifdef WORLD_WATER_ENABLED
                 if (isEyeInWater == 0) {
             #endif
-                if (depthTrans < 1.0) {
+                if (depthTransL < depthOpaqueL) {
+                    vec2 uvSky = DirectionToUV(localViewDir);
+                    vec3 fogColorFinal = textureLod(texSky, uvSky, 0).rgb;
+
                     #if SKY_TYPE == SKY_TYPE_CUSTOM
-                        vec3 fogColorFinal = GetCustomSkyColor(localSunDirection.y, localViewDir.y);
-                        fogColorFinal *= Sky_BrightnessF;
+                        //vec3 fogColorFinal = GetCustomSkyColor(localSunDirection.y, localViewDir.y);
 
                         float fogDist = GetShapedFogDistance(localPos);
                         float fogF = GetCustomFogFactor(fogDist);
-
-                        #if defined WORLD_SKY_ENABLED && SKY_VOL_FOG_TYPE != VOL_TYPE_NONE //&& SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                            #ifdef DISTANT_HORIZONS
-                                float skyTraceFar = max(SkyFar, dhFarPlane);
-                            #else
-                                float skyTraceFar = SkyFar;
-                            #endif
-
-                            vec3 skyScatter = vec3(0.0);
-                            vec3 skyTransmit = vec3(1.0);
-
-                            #if SKY_CLOUD_TYPE <= CLOUDS_VANILLA
-                                TraceSky(skyScatter, skyTransmit, cameraPosition, localViewDir, viewDist, skyTraceFar, 16);
-                            #else
-                                TraceCloudSky(skyScatter, skyTransmit, cameraPosition, localViewDir, viewDist, skyTraceFar, 8, CLOUD_SHADOW_STEPS);
-                            #endif
-
-                            fogColorFinal = fogColorFinal * skyTransmit + skyScatter;
-                        #endif
                     #elif SKY_TYPE == SKY_TYPE_VANILLA
-                        vec4 deferredFog = unpackUnorm4x8(deferredData.b);
-                        vec3 fogColorFinal = RGBToLinear(deferredFog.rgb);
-                        fogColorFinal = GetVanillaFogColor(fogColorFinal, localViewDir.y);
-                        fogColorFinal *= Sky_BrightnessF;
+                        // vec4 deferredFog = unpackUnorm4x8(deferredData.b);
+                        // vec3 fogColorFinal = RGBToLinear(deferredFog.rgb);
+                        // fogColorFinal = GetVanillaFogColor(fogColorFinal, localViewDir.y);
 
                         float fogF = deferredFog.a;
                     #endif
 
+                    //fogColorFinal *= Sky_BrightnessF;
+
+                    #if defined WORLD_SKY_ENABLED && SKY_VOL_FOG_TYPE != VOL_TYPE_NONE //&& SKY_CLOUD_TYPE > CLOUDS_VANILLA
+                        #ifdef DISTANT_HORIZONS
+                            float skyTraceFar = max(far, dhFarPlane);
+                        #else
+                            float skyTraceFar = far;
+                        #endif
+
+                        vec3 skyScatter = vec3(0.0);
+                        vec3 skyTransmit = vec3(1.0);
+
+                        #if SKY_CLOUD_TYPE <= CLOUDS_VANILLA
+                            TraceSky(skyScatter, skyTransmit, cameraPosition, localViewDir, viewDist, skyTraceFar, 8);
+                        #else
+                            TraceCloudSky(skyScatter, skyTransmit, cameraPosition, localViewDir, viewDist, skyTraceFar, 8, CLOUD_SHADOW_STEPS);
+                        #endif
+
+                        fogColorFinal = fogColorFinal * skyTransmit + skyScatter;
+                    #endif
+
                     final.rgb = mix(final.rgb, fogColorFinal, fogF);
                     if (final.a > (1.5/255.0)) final.a = min(final.a + fogF, 1.0);
-
-                    #if SKY_TYPE == SKY_TYPE_CUSTOM
-                    #endif
                 }
             #ifdef WORLD_WATER_ENABLED
                 }
@@ -806,18 +819,17 @@ layout(location = 0) out vec4 outFinal;
 
         if (isWater) {
             if (tir) final.a = 1.0;
-
-            //final.rgb *= final.a;
-            final.rgb += opaqueFinal * (1.0 - final.a);
         }
-        else {
-            vec3 tint = albedo;
-            if (any(greaterThan(tint, EPSILON3)))
-                tint = normalize(tint) * 1.7;
+        // else {
+        //     vec3 tint = albedo;
+        //     if (any(greaterThan(tint, EPSILON3)))
+        //         tint = normalize(tint) * 1.7;
 
-            tint = mix(tint, vec3(1.0), pow(1.0 - final.a, 3.0));
-            final.rgb = mix(opaqueFinal * tint, final.rgb, final.a);
-        }
+        //     tint = mix(tint, vec3(1.0), pow(1.0 - final.a, 3.0));
+        //     opaqueFinal *= tint;
+        // }
+
+        final.rgb += opaqueFinal * (1.0 - final.a);
 
         #if defined WORLD_WATER_ENABLED && WATER_VOL_FOG_TYPE == VOL_TYPE_FAST && WATER_DEPTH_LAYERS == 1
             if (isEyeInWater == 1) {
@@ -970,7 +982,11 @@ layout(location = 0) out vec4 outFinal;
         #endif
 
         vec4 overlayColor = textureLod(BUFFER_OVERLAY, texcoord, 0);
-        final = mix(final, overlayColor, overlayColor.a);
+        // final = mix(final, overlayColor, overlayColor.a);
+        final.rgb *= 1.0 - overlayColor.a;
+        final.rgb += overlayColor.rgb;
+        final.a = max(final.a, overlayColor.a);
+        // = mix(final, overlayColor, overlayColor.a);
         
         outFinal = final;
     }

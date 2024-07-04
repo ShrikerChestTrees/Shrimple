@@ -55,6 +55,16 @@ uniform sampler2D gtexture;
 uniform sampler2D lightmap;
 uniform sampler2D noisetex;
 
+#ifdef WORLD_SKY_ENABLED
+    #if LIGHTING_MODE != LIGHTING_MODE_NONE
+        uniform sampler2D texSkyIrradiance;
+    #endif
+
+    #if MATERIAL_REFLECTIONS != REFLECT_NONE && !defined DEFERRED_BUFFER_ENABLED
+        uniform sampler2D texSky;
+    #endif
+#endif
+
 #if MATERIAL_NORMALS == NORMALMAP_OLDPBR || MATERIAL_NORMALS == NORMALMAP_LABPBR || defined PARALLAX_ENABLED || MATERIAL_OCCLUSION == OCCLUSION_LABPBR
     uniform sampler2D normals;
 #endif
@@ -208,8 +218,10 @@ uniform int frameCounter;
 #include "/lib/sampling/bayer.glsl"
 #include "/lib/sampling/depth.glsl"
 #include "/lib/sampling/ign.glsl"
+#include "/lib/sampling/erp.glsl"
 #include "/lib/sampling/noise.glsl"
 
+#include "/lib/utility/hsv.glsl"
 #include "/lib/utility/anim.glsl"
 #include "/lib/utility/lightmap.glsl"
 #include "/lib/utility/tbn.glsl"
@@ -226,11 +238,14 @@ uniform int frameCounter;
 //     #include "/lib/sampling/anisotropic.glsl"
 // #endif
 
+#if defined(WORLD_WETNESS_ENABLED) && (defined(WORLD_SKY_ENABLED) || defined(WORLD_WATER_ENABLED))
+    #include "/lib/material/porosity.glsl"
+#endif
+
 #ifdef WORLD_SKY_ENABLED
     #include "/lib/world/sky.glsl"
 
     #ifdef WORLD_WETNESS_ENABLED
-        #include "/lib/material/porosity.glsl"
         #include "/lib/world/wetness.glsl"
         #include "/lib/world/wetness_ripples.glsl"
     #endif
@@ -242,6 +257,10 @@ uniform int frameCounter;
 
 #if SKY_TYPE == SKY_TYPE_CUSTOM
     #include "/lib/fog/fog_custom.glsl"
+    
+    #ifdef WORLD_WATER_ENABLED
+        #include "/lib/fog/fog_water_custom.glsl"
+    #endif
 #elif SKY_TYPE == SKY_TYPE_VANILLA
     #include "/lib/fog/fog_vanilla.glsl"
 #endif
@@ -319,7 +338,6 @@ uniform int frameCounter;
     // #if defined IRIS_FEATURE_SSBO && LPV_SIZE > 0 && (LIGHTING_MODE > LIGHTING_MODE_BASIC || LPV_SHADOW_SAMPLES > 0)
     #ifdef IS_LPV_ENABLED
         #include "/lib/buffers/volume.glsl"
-        #include "/lib/utility/hsv.glsl"
 
         #include "/lib/lpv/lpv.glsl"
         #include "/lib/lpv/lpv_render.glsl"
@@ -386,7 +404,7 @@ void main() {
         float skyWetness = 0.0, puddleF = 0.0;
         vec4 rippleNormalStrength = vec4(0.0);
 
-        if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT) {
+        // if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT) {
             #if DISPLACE_MODE == DISPLACE_TESSELATION
                 vec3 worldPos = vIn.surfacePos + cameraPosition;
             #else
@@ -405,7 +423,7 @@ void main() {
                 //localCoord -= rippleNormalStrength.yx * rippleNormalStrength.w * RIPPLE_STRENGTH;
                 if (!skipParallax) atlasCoord = GetAtlasCoord(localCoord, vIn.atlasBounds);
             #endif
-        }
+        // }
     #endif
 
     vec3 viewPos = (gbufferModelView * vec4(vIn.localPos, 1.0)).xyz;
@@ -485,6 +503,10 @@ void main() {
     float sss = GetMaterialSSS(vIn.blockId, atlasCoord, dFdXY);
     float emission = GetMaterialEmission(vIn.blockId, atlasCoord, dFdXY);
     GetMaterialSpecular(vIn.blockId, atlasCoord, dFdXY, roughness, metal_f0);
+
+    #if defined(WORLD_WETNESS_ENABLED) && (defined(WORLD_SKY_ENABLED) || defined(WORLD_WATER_ENABLED))
+        porosity = GetMaterialPorosity(atlasCoord, dFdXY, roughness, metal_f0);
+    #endif
 
     #if MATERIAL_EMISSION == EMISSION_NONE
         if (vIn.blockId == BLOCK_CAVEVINE_BERRIES) emission = 0.0;
@@ -611,7 +633,7 @@ void main() {
     mat3 matLocalTBN = GetLocalTBN(localNormal, localTangent, vIn.localTangent.w);
 
     #if defined WORLD_SKY_ENABLED && defined WORLD_WETNESS_ENABLED && WORLD_WETNESS_PUDDLES != PUDDLES_NONE
-        if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT) {
+        // if (renderStage == MC_RENDER_STAGE_TERRAIN_SOLID || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT_MIPPED || renderStage == MC_RENDER_STAGE_TERRAIN_CUTOUT) {
             #if DISPLACE_MODE == DISPLACE_TESSELATION
                 ApplyWetnessPuddles(texNormal, vIn.surfacePos, skyWetness, porosity, puddleF);
             #else
@@ -621,7 +643,7 @@ void main() {
             #if WORLD_WETNESS_PUDDLES != PUDDLES_BASIC
                 ApplyWetnessRipples(texNormal, rippleNormalStrength);
             #endif
-        }
+        // }
     #endif
 
     vec3 localViewDir = normalize(vIn.localPos);
