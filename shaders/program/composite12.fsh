@@ -17,7 +17,10 @@ uniform sampler2D BUFFER_DEFERRED_SHADOW;
 uniform usampler2D BUFFER_DEFERRED_DATA;
 uniform sampler2D BUFFER_DEFERRED_NORMAL_TEX;
 uniform sampler2D BUFFER_BLOCK_DIFFUSE;
-uniform sampler2D TEX_LIGHTMAP;
+
+#ifdef EFFECT_SSAO_ENABLED
+    uniform sampler2D texSSAO;
+#endif
 
 #if defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
     uniform sampler2D texSkyIrradiance;
@@ -400,6 +403,13 @@ layout(location = 0) out vec4 outFinal;
             vec4 deferredNormal = unpackUnorm4x8(deferredData.r);
             vec3 localNormal = deferredNormal.rgb;
 
+            float occlusion = deferredLighting.z;
+
+            #ifdef EFFECT_SSAO_ENABLED
+                float deferredOcclusion = textureLod(texSSAO, texcoord, 0).r;
+                occlusion = min(occlusion, deferredOcclusion);
+            #endif
+
             if (any(greaterThan(localNormal, EPSILON3)))
                 localNormal = normalize(localNormal * 2.0 - 1.0);
 
@@ -433,6 +443,8 @@ layout(location = 0) out vec4 outFinal;
                     //vec3 deferredShadow = unpackUnorm4x8(deferredData.b).rgb;
                     deferredShadow = textureLod(BUFFER_DEFERRED_SHADOW, texcoord, 0).rgb;
                 #endif
+
+                //occlusion = max(occlusion, luminance(deferredShadow));
             #endif
 
             vec3 worldPos = cameraPosition + localPos;
@@ -445,7 +457,8 @@ layout(location = 0) out vec4 outFinal;
             // #endif
 
             vec3 albedo = RGBToLinear(deferredColor);
-            float occlusion = deferredLighting.z;
+            //float occlusion = deferredLighting.z;
+            // occlusion = min(occlusion, deferredLighting.z);
             float emission = deferredLighting.a;
             float sss = deferredNormal.a;
 
@@ -491,7 +504,7 @@ layout(location = 0) out vec4 outFinal;
                 #endif
 
                 if (hasWaterDepth) {
-                    #if defined WORLD_SKY_ENABLED
+                    #ifdef WORLD_SKY_ENABLED
                         puddleF = 1.0;
                     #endif
 
@@ -625,28 +638,28 @@ layout(location = 0) out vec4 outFinal;
             // #endif
 
             #ifdef SKY_BORDER_FOG_ENABLED
-                vec2 uvSky = DirectionToUV(localViewDir);
-                vec3 fogColorFinal = textureLod(texSky, uvSky, 0).rgb;
+                // vec2 uvSky = DirectionToUV(localViewDir);
+                // vec3 fogColorFinal = textureLod(texSky, uvSky, 0).rgb;
 
                 #if SKY_TYPE == SKY_TYPE_CUSTOM
                     // #ifndef IRIS_FEATURE_SSBO
                     //     vec3 localSunDirection = normalize(mat3(gbufferModelViewInverse) * sunPosition);
                     // #endif
 
-                    // vec3 fogColorFinal = GetCustomSkyColor(localSunDirection.y, localViewDir.y);
+                    vec3 fogColorFinal = GetCustomSkyColor(localSunDirection.y, localViewDir.y);
 
                     float fogDist = GetShapedFogDistance(localPos);
                     float fogF = GetCustomFogFactor(fogDist);
                 #else
                     vec4 deferredFog = unpackUnorm4x8(deferredData.b);
                     
-                    // vec3 fogColorFinal = GetVanillaFogColor(deferredFog.rgb, localViewDir.y);
-                    // fogColorFinal = RGBToLinear(fogColorFinal);
+                    vec3 fogColorFinal = GetVanillaFogColor(deferredFog.rgb, localViewDir.y);
+                    fogColorFinal = RGBToLinear(fogColorFinal);
 
                     float fogF = deferredFog.a;
                 #endif
 
-                // fogColorFinal *= Sky_BrightnessF;
+                fogColorFinal *= Sky_BrightnessF;
 
                 #if defined WORLD_SKY_ENABLED && SKY_VOL_FOG_TYPE != VOL_TYPE_NONE //&& SKY_CLOUD_TYPE > CLOUDS_VANILLA
                     #ifdef DISTANT_HORIZONS

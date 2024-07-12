@@ -11,6 +11,10 @@
 #define SKY_TYPE_VANILLA 0
 #define SKY_TYPE_CUSTOM 1
 
+#define STARS_NONE 0
+#define STARS_VANILLA 1
+#define STARS_FANCY 2
+
 #define FOG_MODE_NONE 0
 #define FOG_MODE_BORDER 1
 //#define FOG_MODE_FULL 0
@@ -140,12 +144,13 @@
 #define DEBUG_VIEW_DEFERRED_VL_TRANSMIT 10
 #define DEBUG_VIEW_BLOCK_DIFFUSE 11
 #define DEBUG_VIEW_BLOCK_SPECULAR 12
-#define DEBUG_VIEW_VELOCITY 13
-#define DEBUG_VIEW_SHADOW_COLOR 14
-#define DEBUG_VIEW_BLOOM_TILES 15
-#define DEBUG_VIEW_DEPTH_TILES 16
-#define DEBUG_VIEW_SKY_IRRADIANCE 17
-#define DEBUG_VIEW_WHITEWORLD 18
+#define DEBUG_VIEW_SSAO 13
+#define DEBUG_VIEW_VELOCITY 14
+#define DEBUG_VIEW_SHADOW_COLOR 15
+#define DEBUG_VIEW_BLOOM_TILES 16
+#define DEBUG_VIEW_DEPTH_TILES 17
+#define DEBUG_VIEW_SKY_IRRADIANCE 18
+#define DEBUG_VIEW_WHITEWORLD 19
 
 #define BUFFER_FINAL colortex0
 #define BUFFER_DEFERRED_COLOR colortex1
@@ -153,6 +158,7 @@
 #define BUFFER_DEFERRED_DATA colortex3
 #define BUFFER_BLOCK_DIFFUSE colortex4
 #define BUFFER_FINAL_PREV colortex5
+#define BUFFER_SSAO colortex6
 #define BUFFER_VELOCITY colortex7
 #define BUFFER_DEFERRED_NORMAL_TEX colortex9
 #define BUFFER_VL_SCATTER colortex8
@@ -161,25 +167,25 @@
 #define BUFFER_BLOOM_TILES colortex15
 #define BUFFER_OVERLAY colortex15
 
-#ifdef RENDER_GBUFFER
+// #ifdef RENDER_GBUFFER
 	#define TEX_LIGHTMAP lightmap
-#endif
+// #endif
 
 #ifdef IS_IRIS
-	#ifndef RENDER_GBUFFER
-		#define TEX_LIGHTMAP texLightmap
-	#endif
+	// #ifndef RENDER_GBUFFER
+	// 	#define TEX_LIGHTMAP texLightmap
+	// #endif
 	
 	#define TEX_RIPPLES texRipples
 	#define TEX_CLOUDS texClouds
 	#define TEX_CLOUDS_VANILLA texVanillaClouds
-#else
-	#ifndef RENDER_GBUFFER
-		#define TEX_LIGHTMAP colortex13
-	#endif
+// #else
+// 	#ifndef RENDER_GBUFFER
+// 		#define TEX_LIGHTMAP colortex13
+// 	#endif
 
-	#define TEX_RIPPLES colortex13
-	#define TEX_CLOUDS shadowcolor1
+// 	#define TEX_RIPPLES colortex13
+// 	#define TEX_CLOUDS shadowcolor1
 #endif
 
 #define TEX_LIGHT_NOISE noisetex

@@ -7,8 +7,8 @@
 
 in vec2 texcoord;
 
-uniform sampler2D depthtex1;
-uniform sampler2D colortex12;
+uniform sampler2D depthtex0;
+uniform sampler2D texSSAO;
 
 #ifdef DISTANT_HORIZONS
     uniform sampler2D dhDepthTex;
@@ -86,60 +86,12 @@ uniform int fogShape;
 #endif
 
 
-float BilateralGaussianDepthBlur_5x(const in vec2 texcoord, const in float linearDepth) {
-    const float g_sigmaXY = 3.0;
-    const float g_sigmaV = 0.2;
-
-    const float c_halfSamplesX = 2.0;
-    const float c_halfSamplesY = 2.0;
-
-    float total = 0.0;
-    float accum = 0.0;
-    
-    for (float iy = -c_halfSamplesY; iy <= c_halfSamplesY; iy++) {
-        float fy = Gaussian(g_sigmaXY, iy);
-
-        for (float ix = -c_halfSamplesX; ix <= c_halfSamplesX; ix++) {
-            float fx = Gaussian(g_sigmaXY, ix);
-            
-            vec2 sampleTex = texcoord + vec2(ix, iy) * pixelSize;
-
-            ivec2 iTexBlend = ivec2(sampleTex * viewSize);
-            float sampleValue = texelFetch(colortex12, iTexBlend, 0).r;
-
-            ivec2 iTexDepth = ivec2(sampleTex * viewSize);
-            float sampleDepth = texelFetch(depthtex1, iTexDepth, 0).r;
-            float sampleDepthL = linearizeDepth(sampleDepth, near, farPlane);
-
-            #ifdef DISTANT_HORIZONS
-                float dhDepth = texelFetch(dhDepthTex, iTexDepth, 0).r;
-                float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
-
-                if (sampleDepth >= 1.0 || (dhDepthL < sampleDepthL && dhDepth > 0.0)) {
-                    sampleDepthL = dhDepthL;
-                    //sampleDepth = dhDepth;
-                }
-            #endif
-            
-            float fv = Gaussian(g_sigmaV, abs(sampleDepthL - linearDepth));
-            
-            float weight = fx*fy*fv;
-            accum += weight * sampleValue;
-            total += weight;
-        }
-    }
-    
-    if (total <= EPSILON) return 0.0;
-    return accum / total;
-}
-
-
 /* RENDERTARGETS: 0 */
 layout(location = 0) out vec4 outAO;
 
 void main() {
     ivec2 iTexDepth = ivec2(texcoord * viewSize);
-    float depth = texelFetch(depthtex1, iTexDepth, 0).r;
+    float depth = texelFetch(depthtex0, iTexDepth, 0).r;
     float depthL = linearizeDepth(depth, near, farPlane);
     mat4 projectionInv = gbufferProjectionInverse;
 
@@ -154,13 +106,10 @@ void main() {
         }
     #endif
 
-    float occlusion = 0.0;
+    float occlusion = 1.0;
 
     if (depth < 1.0) {
-        //occlusion = textureLod(colortex12, texcoord, 0).r;
-
-        occlusion = BilateralGaussianDepthBlur_5x(texcoord, depthL);
-        // occlusion = textureLod(colortex12, texcoord, 0).r;
+        occlusion = textureLod(texSSAO, texcoord, 0).r;
 
         #ifdef SKY_BORDER_FOG_ENABLED
             vec3 clipPos = vec3(texcoord, depth) * 2.0 - 1.0;
@@ -185,14 +134,16 @@ void main() {
                     #ifdef WORLD_WATER_ENABLED
                         }
                     #endif
-
-                    occlusion *= 1.0 - fogF;
-                #elif SKY_TYPE == SKY_TYPE_VANILLA
-                    occlusion *= 1.0 - GetVanillaFogFactor(localPos);
+                #else
+                    float fogF = GetVanillaFogFactor(localPos);
                 #endif
+
+                occlusion = 1.0 - occlusion;
+                occlusion *= 1.0 - fogF;
+                occlusion = 1.0 - occlusion;
             #endif
         #endif
     }
 
-    outAO = vec4(1.0 - occlusion);
+    outAO = vec4(occlusion);
 }

@@ -186,7 +186,7 @@ uniform vec4 entityColor;
 // #endif
 
 #include "/lib/material/normalmap.glsl"
-#include "/lib/lighting/common.glsl"
+#include "/lib/vertex_common.glsl"
 
 #ifdef EFFECT_TAA_ENABLED
     #include "/lib/effects/taa_jitter.glsl"
@@ -206,6 +206,14 @@ void main() {
     vOut.color = gl_Color;
 
     vOut.lmcoord = LightMapNorm(vOut.lmcoord);
+
+    vec3 viewNormal = normalize(gl_NormalMatrix * gl_Normal);
+
+    #if LIGHTING_MODE == LIGHTING_MODE_NONE && defined WORLD_SKY_ENABLED
+        vec3 lightViewDir = normalize(shadowLightPosition);
+        float geoNoL = dot(viewNormal, lightViewDir);
+        vOut.color.rgb *= max(geoNoL, 0.0)*0.25 + 0.75;
+    #endif
     
     vec4 viewPos = BasicVertex();
     gl_Position = gl_ProjectionMatrix * viewPos;
@@ -219,7 +227,7 @@ void main() {
     GetAtlasBounds(vOut.texcoord, vOut.atlasBounds, vOut.localCoord);
 
     #if defined PARALLAX_ENABLED && defined MATERIAL_DISPLACE_ENTITIES
-        vec3 viewNormal = normalize(gl_NormalMatrix * gl_Normal);
+        // vec3 viewNormal = normalize(gl_NormalMatrix * gl_Normal);
         vec3 viewTangent = normalize(gl_NormalMatrix * at_tangent.xyz);
         mat3 matViewTBN = GetViewTBN(viewNormal, viewTangent, at_tangent.w);
 
