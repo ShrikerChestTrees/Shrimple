@@ -1,13 +1,14 @@
 [---------------------------------]
 |                                 |
 | Provided by: ShrikerChestTree(s)|
-|      Version: Release 15.0      |
+|      Version: Release 15.1      |
 |                                 |
 [---------------------------------]
 
 |-------------------------------------------------------------------------------------------------------------------------------------|
 
-(-----INFO-----)
+                                                 (-----INFO-----)
+
 This is a new kind of Russian translation for the Shrimple shader!
 
 
@@ -15,14 +16,24 @@ For the creator/future creator and future new Russian translators
 
 I will explain how to quickly find the line where the “old” option was.
 I added a new quick way in this update (13.5) but you can use the old quick way too.
- 
-First you need to use the Ctrl+F key to open a search on the site (github)/notebook (application) inside the ru_ru.lang file. 
+And also from the 15.0 update I added tables to make it easier to find the main settings, normal settings and options!
+
+First you need to use the "Ctrl+F" key to open a search on the site (github)/notebook (application) inside the ru_ru.lang file. 
 Then insert the desired character to quickly find the string at the bottom:
+
+                                           (-----Titles-----)
 
 (, (- (Recommended), ----- - sign for additional information only.
 [, [# (Recommended), ##### - Main setting where you can see the setting or option at the bottom of the lines.
 |, |/ (Recommended), ///// - A setting where you can see only an option at the bottom of the lines.
 {, {= (Recommended), ===== - Option (may have the option setting at the bottom).
+
+                 (-----Tables-----)
+
+|, |- (Recommended) - Table of information.
+[- (Recommended) - Table where main setting and option.
+- (Recommended) - Table where normal setting and option.
+
 
 So far that's all you can know about it and it's unknown if there will be future new developers or future new translators into Russian 
 but it should at least happen when we're gone but for now you can enjoy the new translation updates...
