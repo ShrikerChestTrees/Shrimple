@@ -77,9 +77,9 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
         #endif
 
         #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-            float weatherF = 1.0 - 0.5 * _pow2(skyRainStrength);
+            float weatherF = 1.0 - 0.5 * _pow2(weatherStrength);
         #else
-            float weatherF = 1.0 - 0.8 * _pow2(skyRainStrength);
+            float weatherF = 1.0 - 0.8 * _pow2(weatherStrength);
         #endif
 
         //vec3 skyLightColor = CalculateSkyLightWeatherColor(WorldSkyLightColor);
@@ -155,6 +155,8 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
 
         #ifdef WORLD_SKY_ENABLED
             #if defined WORLD_WATER_ENABLED && WATER_VOL_FOG_TYPE == VOL_TYPE_FANCY && WATER_DEPTH_LAYERS > 1
+                isWater = false;
+                
                 if (waterDepth[0] < farDist) {
                     isWater = traceDist > waterDepth[0] && traceDist < waterDepth[1];
                     // waterDepthEye += max(traceDist - waterDepth[0], 0.0);
@@ -199,12 +201,12 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
                 sampleDensity = GetSkyDensity(traceAltitude);
 
                 #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                    // if (skyRainStrength > EPSILON) {
+                    // if (weatherStrength > EPSILON) {
                     //     const vec3 worldUp = vec3(0.0, 1.0, 0.0);
                     //     //float cloudUnder = TraceCloudDensity(traceWorldPos, worldUp, CLOUD_SHADOW_STEPS);
                     //     float cloudUnder = TraceCloudDensity(traceWorldPos, worldUp, CLOUD_GROUND_SHADOW_STEPS);
-                    //     // cloudUnder = smoothstep(0.0, 0.5, cloudUnder) * _pow2(skyRainStrength);
-                    //     cloudUnder *= _pow2(skyRainStrength);
+                    //     // cloudUnder = smoothstep(0.0, 0.5, cloudUnder) * _pow2(weatherStrength);
+                    //     cloudUnder *= _pow2(weatherStrength);
 
                     //     sampleDensity = mix(sampleDensity, AirDensityRainF, cloudUnder);
                     //     sampleScattering = mix(sampleScattering, AirScatterColor_rain, cloudUnder);
@@ -328,19 +330,21 @@ void ApplyVolumetricLighting(inout vec3 scatterFinal, inout vec3 transmitFinal, 
         #endif
 
         // #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-        #ifdef WORLD_SKY_ENABLED
+        #if defined WORLD_SKY_ENABLED && SKY_CLOUD_TYPE != CLOUDS_NONE
+            float cloudShadow = 1.0;
+
             #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                float cloudShadow = TraceCloudShadow(traceWorldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+                cloudShadow = TraceCloudShadow(traceWorldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
                 // float cloudShadow = _TraceCloudShadow(traceWorldPos, dither, CLOUD_SHADOW_STEPS);
                 //sampleColor *= 1.0 - (1.0 - Shadow_CloudBrightnessF) * min(cloudF, 1.0);
-                sampleF *= cloudShadow;// * 0.7 + 0.3;
             #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
                 if (traceWorldPos.y < cloudHeight + 0.5*CloudHeight) {
-                    float cloudShadow = SampleCloudShadow(traceLocalPos, localSkyLightDirection, cloudOffset, camOffset, 0.0);
+                    cloudShadow = SampleCloudShadow(traceLocalPos, localSkyLightDirection, cloudOffset, camOffset, 0.0);
                     //sampleF *= 1.0 - (1.0 - Shadow_CloudBrightnessF) * min(cloudShadow, 1.0);
-                    sampleF *= cloudShadow;
                 }
             #endif
+
+            sampleF *= cloudShadow * 0.5 + 0.5;
         #endif
 
         sampleLit += samplePhase * sampleF * sampleColor;

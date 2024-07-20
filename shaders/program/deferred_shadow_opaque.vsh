@@ -1,6 +1,7 @@
-#define RENDER_OPAQUE_SSAO
+#define RENDER_SHADOW_OPAQUE
 #define RENDER_DEFERRED
 #define RENDER_VERTEX
+#define RENDER_OPAQUE
 
 #include "/lib/constants.glsl"
 #include "/lib/common.glsl"

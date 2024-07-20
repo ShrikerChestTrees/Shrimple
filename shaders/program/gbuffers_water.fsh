@@ -29,11 +29,7 @@ in VertexData {
         #endif
     #endif
 
-    // #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-    //     vec3 cloudPos;
-    // #endif
-
-    #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+    #if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
         #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
             vec3 shadowPos[4];
             flat int shadowTile;
@@ -44,10 +40,15 @@ in VertexData {
 } vIn;
 
 uniform sampler2D gtexture;
-uniform sampler2D lightmap;
 uniform sampler2D noisetex;
 
+#if LIGHTING_MODE == LIGHTING_MODE_NONE
+    uniform sampler2D lightmap;
+#endif
+
 #ifdef WORLD_SKY_ENABLED
+    uniform sampler3D texClouds;
+
     #if LIGHTING_MODE != LIGHTING_MODE_NONE
         uniform sampler2D texSkyIrradiance;
     #endif
@@ -82,7 +83,7 @@ uniform sampler2D noisetex;
 
     #if defined SHADOW_CLOUD_ENABLED || (MATERIAL_REFLECTIONS != REFLECT_NONE && defined MATERIAL_REFLECT_CLOUDS)
         #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-            uniform sampler3D TEX_CLOUDS;
+            // uniform sampler3D TEX_CLOUDS;
         #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
             uniform sampler2D TEX_CLOUDS_VANILLA;
         #endif
@@ -101,7 +102,7 @@ uniform sampler2D noisetex;
     uniform sampler2D texDepthNear;
 #endif
 
-#ifdef RENDER_SHADOWS_ENABLED
+#if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
     uniform sampler2D shadowtex0;
     uniform sampler2D shadowtex1;
 
@@ -160,7 +161,8 @@ uniform ivec2 eyeBrightnessSmooth;
     uniform float rainStrength;
     uniform float wetness;
 
-    uniform float skyRainStrength;
+    uniform float weatherStrength;
+    uniform float weatherPuddleStrength;
     uniform float skyWetnessSmooth;
 
     #ifdef IS_IRIS
@@ -176,12 +178,10 @@ uniform ivec2 eyeBrightnessSmooth;
     uniform float waterDensitySmooth;
 #endif
 
-#if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+#if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
     // uniform vec3 shadowLightPosition;
 
-    #if SHADOW_TYPE != SHADOW_TYPE_NONE
-        uniform mat4 shadowProjection;
-    #endif
+    uniform mat4 shadowProjection;
 #endif
 
 uniform int heldItemId;
@@ -294,7 +294,7 @@ uniform int heldBlockLightValue2;
     #endif
 #endif
 
-#ifdef RENDER_SHADOWS_ENABLED
+#if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
     #include "/lib/buffers/shadow.glsl"
 
     #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
@@ -358,6 +358,10 @@ uniform int heldBlockLightValue2;
 #include "/lib/material/subsurface.glsl"
 
 #ifdef WORLD_WATER_ENABLED
+    #if defined WATER_FOAM || defined WATER_FLOW
+        #include "/lib/water/foam.glsl"
+    #endif
+
     #if WATER_WAVE_SIZE > 0
         #include "/lib/world/water_waves.glsl"
     #endif
@@ -405,17 +409,16 @@ uniform int heldBlockLightValue2;
 
 
 #if (defined MATERIAL_REFRACT_ENABLED || defined DEFER_TRANSLUCENT) && defined DEFERRED_BUFFER_ENABLED
-    #ifdef EFFECT_TAA_ENABLED
-        /* RENDERTARGETS: 1,2,3,9,7 */
-        layout(location = 4) out vec4 outVelocity;
-    #else
-        /* RENDERTARGETS: 1,2,3,9 */
-    #endif
-
     layout(location = 0) out vec4 outDeferredColor;
-    layout(location = 1) out vec4 outDeferredShadow;
-    layout(location = 2) out uvec4 outDeferredData;
-    layout(location = 3) out vec3 outDeferredTexNormal;
+    layout(location = 1) out uvec4 outDeferredData;
+    layout(location = 2) out vec3 outDeferredTexNormal;
+
+    #ifdef EFFECT_TAA_ENABLED
+        /* RENDERTARGETS: 1,3,9,7 */
+        layout(location = 3) out vec4 outVelocity;
+    #else
+        /* RENDERTARGETS: 1,3,9 */
+    #endif
 #else
     layout(location = 0) out vec4 outFinal;
 
@@ -451,41 +454,38 @@ void main() {
     if (!gl_FrontFacing) localNormal = -localNormal;
 
     #ifdef WORLD_WATER_ENABLED
-        float oceanFoam = 0.0;
-
-        #ifndef WATER_TEXTURED
-            if (isWater) skipParallax = true;
+        #if defined WORLD_WATER_ENABLED && (defined WATER_TESSELLATION_ENABLED || WATER_WAVE_SIZE > 0)
+            vec3 waterLocalPos = vIn.surfacePos;
+        #else
+            vec3 waterLocalPos = vIn.localPos;
         #endif
 
-        if (isWater && abs(vIn.localNormal.y) > 0.5) {
+        vec3 waterWorldPos = waterLocalPos + cameraPosition;
+        vec3 waveOffset = vec3(0.0);
+        float oceanFoam = 0.0;
+
+
+        if (isWater) {
+            // TODO: enable textured water parallax for non-flowing only
+            // #ifndef WATER_TEXTURED
+            //     skipParallax = true;
+            // #endif
             skipParallax = true;
 
             #if WATER_WAVE_SIZE > 0
-                float waveDistF = 32.0 / (32.0 + viewDist);
-
-                // texNormal = water_waveNormal(worldPos.xz, vIn.lmcoord.y, viewDist, waterUvOffset);
-                float time = GetAnimationFactor();
-                vec3 waveOffset = GetWaveHeight(cameraPosition + vIn.surfacePos, vIn.lmcoord.y, time, WATER_WAVE_DETAIL);
-                vec3 wavePos = vIn.surfacePos;
-                wavePos.y += waveOffset.y * waveDistF;
-
-                vec3 dX = normalize(dFdx(wavePos.xzy));
-                vec3 dY = normalize(dFdy(wavePos.xzy));
-                texNormal = normalize(cross(dY, dX));
-                waterUvOffset = waveOffset.xz * waveDistF;
-
-                if (localNormal.y < 0.0) texNormal = -texNormal;
-
-                if (localNormal.y >= 1.0 - EPSILON) {
-                    localCoord += waterUvOffset;
-                    atlasCoord = GetAtlasCoord(localCoord, vIn.atlasBounds);
+                if (abs(vIn.localNormal.y) > 0.5) {
+                    float time = GetAnimationFactor();
+                    waveOffset = GetWaveHeight(waterWorldPos, vIn.lmcoord.y, time, WATER_WAVE_DETAIL);
                 }
             #endif
         }
+
+        #ifdef WATER_FOAM
+            oceanFoam = SampleWaterFoam(waterWorldPos + vec3(waveOffset.xz, 0.0).xzy, localNormal);
+        #endif
     #endif
 
     #ifdef DISTANT_HORIZONS
-        //float viewDistXZ = length(vIn.localPos.xz);
         if (viewDist > dh_clipDistF * far) {
             discard;
             return;
@@ -493,11 +493,7 @@ void main() {
     #endif
 
     #if defined WORLD_WATER_ENABLED && WATER_DEPTH_LAYERS > 1
-        if (isWater) {//&& (isEyeInWater != 1 || !gl_FrontFacing))
-            SetWaterDepth(viewDist);
-            // discard;
-            // return;
-        }
+        if (isWater) SetWaterDepth(viewDist);
     #endif
 
     float porosity = 0.0;
@@ -523,18 +519,12 @@ void main() {
     #endif
 
     #ifdef PARALLAX_ENABLED
-        //bool isMissingNormal = all(lessThan(normalMap.xy, EPSILON2));
-        //bool isMissingTangent = any(isnan(vLocalTangent));
-
-        //if (vBlockId == BLOCK_LAVA) skipParallax = true;
-
         float texDepth = 1.0;
         vec3 traceCoordDepth = vec3(1.0);
         vec3 tanViewDir = normalize(vIn.viewPos_T);
 
-        if (!skipParallax && viewDist < MATERIAL_DISPLACE_MAX_DIST) {
+        if (!skipParallax && viewDist < MATERIAL_DISPLACE_MAX_DIST)
             atlasCoord = GetParallaxCoord(localCoord, dFdXY, tanViewDir, viewDist, texDepth, traceCoordDepth);
-        }
     #endif
 
     #ifdef DISTANT_HORIZONS
@@ -549,7 +539,7 @@ void main() {
         color.rgb = textureLod(gtexture, atlasCoord, lodFinal).rgb;
         color.a   = textureLod(gtexture, atlasCoord, lodGrad).a;
     #else
-        vec4 color = textureGrad(gtexture, atlasCoord, dFdXY[0] * MIP_BIAS, dFdXY[1] * MIP_BIAS);
+        vec4 color = textureGrad(gtexture, atlasCoord, dFdXY[0], dFdXY[1]);
     #endif
 
     float alphaThreshold = 0.1;//(1.5/255.0);
@@ -572,23 +562,7 @@ void main() {
         return;
     }
 
-    #ifdef WORLD_WATER_ENABLED
-        if (isWater) {
-            // #ifndef WATER_TEXTURED
-            //     // color = vec4(vec3(1.0), Water_OpacityF);
-            // #elif defined DISTANT_HORIZONS
-            //     float distF = smoothstep(0.8 * dh_clipDistF * far, dh_clipDistF * far, viewDist);
-            //     color = mix(color, vec4(1.0), distF);
-            // #endif
-
-            color.a = max(color.a, 0.02);
-
-            color = mix(color, vec4(1.0), oceanFoam);
-        }
-    #endif
-
     vec3 albedo = RGBToLinear(color.rgb * vIn.color.rgb);
-    // albedo = vec3(0.3, 0.6, 0.9);
 
     float occlusion = 1.0;
     #if defined WORLD_AO_ENABLED //&& !defined EFFECT_SSAO_ENABLED
@@ -611,12 +585,13 @@ void main() {
 
     #ifdef WORLD_WATER_ENABLED
         if (isWater) {
-            //float waterRough = 0.06 + 0.3 * min(viewDist / 96.0, 1.0);
-            float distF = 16.0 / (viewDist + 16.0);
-            //float waterRough = 0.0;//mix(0.3 * lmcoord.y, 0.06, distF);
-
+            albedo = mix(albedo, vec3(1.0), oceanFoam);
             metal_f0  = mix(0.02, 0.04, oceanFoam);
             roughness = mix(WATER_ROUGH, 0.50, oceanFoam);
+            sss = oceanFoam;
+
+            color.a = max(color.a, 0.02);
+            color.a = mix(color.a, 1.0, oceanFoam);
         }
     #endif
 
@@ -635,48 +610,7 @@ void main() {
         sss = max(sss, 1.0 - color.a);
     #endif
     
-    vec3 shadowColor = vec3(1.0);
-    #ifdef RENDER_SHADOWS_ENABLED
-        #ifndef IRIS_FEATURE_SSBO
-            vec3 localSkyLightDirection = normalize((gbufferModelViewInverse * vec4(shadowLightPosition, 1.0)).xyz);
-        #endif
-
-        float skyGeoNoL = dot(localNormal, localSkyLightDirection);
-
-        if (skyGeoNoL < EPSILON && sss < EPSILON) {
-            shadowColor = vec3(0.0);
-        }
-        else {
-            #ifdef DISTANT_HORIZONS
-                float shadowDistFar = min(shadowDistance, 0.5*dhFarPlane);
-            #else
-                float shadowDistFar = min(shadowDistance, far);
-            #endif
-
-            vec3 shadowViewPos = (shadowModelViewEx * vec4(vIn.localPos, 1.0)).xyz;
-            float shadowViewDist = length(shadowViewPos.xy);
-            float shadowFade = 1.0 - smoothstep(shadowDistFar - 20.0, shadowDistFar, shadowViewDist);
-
-            #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
-            #else
-                shadowFade *= step(-1.0, vIn.shadowPos.z);
-                shadowFade *= step(vIn.shadowPos.z, 1.0);
-            #endif
-            
-            shadowFade = 1.0 - shadowFade;
-
-            #ifdef SHADOW_COLORED
-                shadowColor = GetFinalShadowColor(localSkyLightDirection, shadowFade, sss);
-            #else
-                shadowColor = vec3(GetFinalShadowFactor(localSkyLightDirection, shadowFade, sss));
-            #endif
-
-            #ifndef LIGHT_LEAK_FIX
-                float lightF = min(luminance(shadowColor), 1.0);
-                lmFinal.y = clamp(lmFinal.y, lightF, 1.0);
-            #endif
-        }
-    #endif
+    float parallaxShadow = 1.0;
 
     #if MATERIAL_NORMALS != NORMALMAP_NONE
         if (!isWater)
@@ -695,15 +629,11 @@ void main() {
                 #if defined WORLD_SKY_ENABLED && MATERIAL_PARALLAX_SHADOW_SAMPLES > 0
                     if (traceCoordDepth.z + EPSILON < 1.0) {
                         vec3 tanLightDir = normalize(vIn.lightPos_T);
-                        shadowColor *= GetParallaxShadow(traceCoordDepth, dFdXY, tanLightDir);
+                        parallaxShadow = GetParallaxShadow(traceCoordDepth, dFdXY, tanLightDir);
                     }
                 #endif
             }
         #endif
-    #endif
-
-    #if LIGHTING_MODE != LIGHTING_MODE_NONE && defined RENDER_SHADOWS_ENABLED
-        occlusion = max(occlusion, luminance(shadowColor));
     #endif
 
     #if defined WORLD_SKY_ENABLED && defined WORLD_WETNESS_ENABLED
@@ -712,7 +642,7 @@ void main() {
                 ApplyWetnessPuddles(texNormal, vIn.localPos, skyWetness, porosity, puddleF);
 
             #if WORLD_WETNESS_PUDDLES != PUDDLES_BASIC
-                if (skyRainStrength > EPSILON)
+                if (weatherStrength > EPSILON)
                     ApplyWetnessRipples(texNormal, rippleNormalStrength);
             #endif
         #endif
@@ -722,23 +652,44 @@ void main() {
     mat3 matLocalTBN = GetLocalTBN(localNormal, localTangent, vIn.localTangent.w);
     texNormal = matLocalTBN * texNormal;
 
-    #if MATERIAL_NORMALS != NORMALMAP_NONE
-        #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
-            float skyTexNoL = max(dot(texNormal, localSkyLightDirection), 0.0);
+    if (isWater) {
+        #if WATER_WAVE_SIZE > 0
+            if (abs(vIn.localNormal.y) > 0.5) {
+                float waveDistF = 32.0 / (32.0 + viewDist);
 
-            #if MATERIAL_SSS != SSS_NONE
-                skyTexNoL = mix(skyTexNoL, 1.0, sss);
-            #endif
+                vec3 wavePos = waterLocalPos;
+                wavePos.y += waveOffset.y * waveDistF;
 
-            shadowColor *= 1.2 * pow(skyTexNoL, 0.8);
+                vec3 dX = normalize(dFdx(wavePos));
+                vec3 dY = normalize(dFdy(wavePos));
+                texNormal = normalize(cross(dX, dY));
+                waterUvOffset = waveOffset.xz * waveDistF;
+
+                // if (localNormal.y < 0.0) texNormal = -texNormal;
+
+                if (localNormal.y >= 1.0 - EPSILON) {
+                    localCoord += waterUvOffset;
+                    atlasCoord = GetAtlasCoord(localCoord, vIn.atlasBounds);
+                }
+            }
         #endif
-    #endif
+
+        #ifdef WATER_FLOW
+            float bump = SampleWaterBump(waterWorldPos, localNormal);
+
+            vec3 bumpPos = waterLocalPos + 0.15*bump * localNormal;
+            vec3 bumpDX = dFdx(bumpPos);
+            vec3 bumpDY = dFdy(bumpPos);
+            vec3 bumpNormal = normalize(cross(bumpDX, bumpDY));
+
+            texNormal = normalize(mix(texNormal, bumpNormal, 1.0 - abs(localNormal.y)));
+        #endif
+    }
 
     vec3 texViewNormal = mat3(gbufferModelView) * texNormal;
 
     #if MATERIAL_NORMALS != NORMALMAP_NONE && (!defined IRIS_FEATURE_SSBO || LIGHTING_MODE == LIGHTING_MODE_NONE) && defined DIRECTIONAL_LIGHTMAP
         vec3 geoViewNormal = mat3(gbufferModelView) * localNormal;
-        //vec3 texViewNormal = mat3(gbufferModelView) * texNormal;
         vec3 viewPos = (gbufferModelView * vec4(vIn.localPos, 1.0)).xyz;
         ApplyDirectionalLightmap(lmFinal.x, viewPos, geoViewNormal, texViewNormal);
     #endif
@@ -754,71 +705,87 @@ void main() {
         float dither = (InterleavedGradientNoise() - 0.5) / 255.0;
         color.rgb = LinearToRGB(albedo);
 
-        float fogF = 0.0;
-        #if SKY_TYPE == SKY_TYPE_VANILLA && defined SKY_BORDER_FOG_ENABLED
-            fogF = GetVanillaFogFactor(vIn.localPos);
-        #endif
-
-        // TODO: should this also apply to forward?
-        // #if MATERIAL_REFLECTIONS != REFLECT_NONE
-        //     if (isWater) {
-        //         //vec3 f0 = GetMaterialF0(albedo, metal_f0);
-        //         float skyNoVm = max(dot(texNormal, -localViewDir), 0.0);
-        //         float skyF = F_schlickRough(skyNoVm, 0.02, roughL);
-        //         color.a = clamp(color.a, skyF * MaterialReflectionStrength, 1.0);
-
-        //         //color.rgb = vec3(0.0);
-        //         color.rgb *= 1.0 - skyF;
-        //     }
-        // #endif
-
         outDeferredColor = color + dither;
-        outDeferredShadow = vec4(shadowColor + dither, 1.0);
         outDeferredTexNormal = texNormal * 0.5 + 0.5;
 
         outDeferredData.r = packUnorm4x8(vec4(localNormal * 0.5 + 0.5, sss + dither));
         outDeferredData.g = packUnorm4x8(vec4(lmFinal, occlusion, emission) + dither);
-        // outDeferredData.b = packUnorm4x8(vec4(fogColor, fogF + dither));
-        outDeferredData.b = packUnorm4x8(vec4(isWater ? 1.0 : 0.0, 0.0, 0.0, 0.0));
+        outDeferredData.b = packUnorm4x8(vec4(isWater ? 1.0 : 0.0, parallaxShadow, 0.0, 0.0) + dither);
         outDeferredData.a = packUnorm4x8(vec4(roughness, metal_f0, porosity, 1.0) + dither);
     #else
-        vec3 diffuseFinal = vec3(0.0), specularFinal = vec3(0.0);
+        vec3 shadowColor = vec3(1.0);
+        #ifdef RENDER_SHADOWS_ENABLED
+            #ifndef IRIS_FEATURE_SSBO
+                vec3 localSkyLightDirection = normalize((gbufferModelViewInverse * vec4(shadowLightPosition, 1.0)).xyz);
+            #endif
+
+            float skyGeoNoL = dot(localNormal, localSkyLightDirection);
+
+            if (skyGeoNoL < EPSILON && sss < EPSILON) {
+                shadowColor = vec3(0.0);
+            }
+            else {
+                #ifdef DISTANT_HORIZONS
+                    float shadowDistFar = min(shadowDistance, 0.5*dhFarPlane);
+                #else
+                    float shadowDistFar = min(shadowDistance, far);
+                #endif
+
+                vec3 shadowViewPos = (shadowModelViewEx * vec4(vIn.localPos, 1.0)).xyz;
+                float shadowViewDist = length(shadowViewPos.xy);
+                float shadowFade = 1.0 - smoothstep(shadowDistFar - 20.0, shadowDistFar, shadowViewDist);
+
+                #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+                #else
+                    shadowFade *= step(-1.0, vIn.shadowPos.z);
+                    shadowFade *= step(vIn.shadowPos.z, 1.0);
+                #endif
+                
+                shadowFade = 1.0 - shadowFade;
+
+                #ifdef SHADOW_COLORED
+                    shadowColor = GetFinalShadowColor(localSkyLightDirection, shadowFade, sss);
+                #else
+                    shadowColor = vec3(GetFinalShadowFactor(localSkyLightDirection, shadowFade, sss));
+                #endif
+
+                #ifndef LIGHT_LEAK_FIX
+                    float lightF = min(luminance(shadowColor), 1.0);
+                    lmFinal.y = clamp(lmFinal.y, lightF, 1.0);
+                #endif
+            }
+        #endif
+    
+        vec3 diffuseFinal = vec3(0.0);
+        vec3 specularFinal = vec3(0.0);
+
         #if LIGHTING_MODE == LIGHTING_MODE_FLOODFILL
             GetFloodfillLighting(diffuseFinal, specularFinal, vIn.localPos, localNormal, texNormal, lmFinal, shadowColor, albedo, metal_f0, roughL, occlusion, sss, false);
 
-            #ifdef WORLD_SKY_ENABLED
-                const bool tir = false; // TODO: ?
-                GetSkyLightingFinal(diffuseFinal, specularFinal, shadowColor, vIn.localPos, localNormal, texNormal, albedo, lmFinal, roughL, metal_f0, occlusion, sss, tir);
-            #else
-                diffuseFinal += WorldAmbientF;
-            #endif
-
-            #if LIGHTING_MODE_HAND != HAND_LIGHT_NONE
-                SampleHandLight(diffuseFinal, specularFinal, vIn.localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
-            #endif
-
-            #if MATERIAL_SPECULAR != SPECULAR_NONE
-                if (metal_f0 >= 0.5) {
-                    diffuseFinal *= mix(MaterialMetalBrightnessF, 1.0, roughL);
-                    specularFinal *= albedo;
-                }
-            #endif
-
             diffuseFinal += emission * MaterialEmissionF;
+        #elif LIGHTING_MODE < LIGHTING_MODE_FLOODFILL
+            GetVanillaLighting(diffuseFinal, lmFinal, shadowColor, occlusion);
+        #endif
 
+        #if defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
+            const bool tir = false;
+            const bool isUnderWater = false;
+            GetSkyLightingFinal(diffuseFinal, specularFinal, shadowColor, vIn.localPos, localNormal, texNormal, albedo, vIn.lmcoord, roughL, metal_f0, occlusion, sss, isUnderWater, tir);
+        #else
+            diffuseFinal += WorldAmbientF;
+        #endif
+
+        #if LIGHTING_MODE_HAND != HAND_LIGHT_NONE
+            SampleHandLight(diffuseFinal, specularFinal, vIn.localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
+        #endif
+
+        #if MATERIAL_SPECULAR != SPECULAR_NONE
+            ApplyMetalDarkening(diffuseFinal, specularFinal, albedo, metal_f0, roughL);
+        #endif
+
+        #if LIGHTING_MODE == LIGHTING_MODE_FLOODFILL
             color.rgb = GetFinalLighting(albedo, diffuseFinal, specularFinal, occlusion);
         #elif LIGHTING_MODE < LIGHTING_MODE_FLOODFILL
-            GetVanillaLighting(diffuseFinal, lmFinal, occlusion);
-
-            #if defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
-                const bool tir = false; // TODO: ?
-                GetSkyLightingFinal(diffuseFinal, specularFinal, shadowColor, vIn.localPos, localNormal, texNormal, albedo, vIn.lmcoord, roughL, metal_f0, occlusion, sss, tir);
-            #endif
-
-            #if LIGHTING_MODE_HAND != HAND_LIGHT_NONE
-                SampleHandLight(diffuseFinal, specularFinal, vIn.localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
-            #endif
-
             color.rgb = GetFinalLighting(albedo, diffuseFinal, specularFinal, metal_f0, roughL, emission, occlusion);
             color.a = min(color.a + luminance(specularFinal), 1.0);
         #endif

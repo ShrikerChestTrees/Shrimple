@@ -39,21 +39,15 @@ out VertexData {
         #endif
     #endif
 
-    // #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-    //     vec3 cloudPos;
-    // #endif
-
-    // #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
-    //     #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
-    //         vec3 shadowPos[4];
-    //         flat int shadowTile;
-    //     #else
-    //         vec3 shadowPos;
-    //     #endif
-    // #endif
+    #if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
+        #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+            vec3 shadowPos[4];
+            flat int shadowTile;
+        #else
+            vec3 shadowPos;
+        #endif
+    #endif
 } vOut;
-
-// uniform sampler2D lightmap;
 
 #if defined IS_TRACING_ENABLED || defined IS_LPV_ENABLED
     uniform sampler2D noisetex;
@@ -83,36 +77,27 @@ uniform float far;
     uniform vec3 shadowLightPosition;
 #endif
 
-// #ifdef WORLD_SHADOW_ENABLED
-//     uniform mat4 shadowModelView;
-//     uniform mat4 shadowProjection;
-//     uniform vec3 shadowLightPosition;
-//     // uniform float far;
+#if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
+    uniform mat4 shadowModelView;
+    uniform mat4 shadowProjection;
 
-//     #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
-//         uniform mat4 gbufferProjection;
-//         uniform float near;
-//     #endif
+    #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+        uniform mat4 gbufferProjection;
+        uniform float near;
+    #endif
 
-//     #if SHADOW_TYPE != SHADOW_TYPE_NONE && defined IS_IRIS
-//         uniform float cloudTime;
-//         uniform float cloudHeight;
-//     #endif
+    #if SHADOW_TYPE != SHADOW_TYPE_NONE && defined IS_IRIS
+        uniform float cloudTime;
+        uniform float cloudHeight;
+    #endif
 
-//     #ifdef DISTANT_HORIZONS
-//         uniform float dhFarPlane;
-//     #endif
-// #endif
-
-#if defined IRIS_FEATURE_SSBO && LIGHTING_MODE != LIGHTING_MODE_NONE //&& !defined RENDER_SHADOWS_ENABLED
-    // uniform vec3 previousCameraPosition;
-    // uniform mat4 gbufferPreviousModelView;
+    #ifdef DISTANT_HORIZONS
+        uniform float dhFarPlane;
+    #endif
 #endif
 
 #ifdef EFFECT_TAA_ENABLED
     uniform float frameTime;
-    // uniform int frameCounter;
-    // uniform vec3 previousCameraPosition;
     uniform vec2 pixelSize;
 #endif
 
@@ -147,23 +132,23 @@ uniform float far;
     #include "/lib/world/waving.glsl"
 #endif
 
-// #ifdef RENDER_SHADOWS_ENABLED
-//     #include "/lib/utility/matrix.glsl"
-//     #include "/lib/buffers/shadow.glsl"
+#if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
+    #include "/lib/utility/matrix.glsl"
+    #include "/lib/buffers/shadow.glsl"
 
-//     #ifdef SHADOW_CLOUD_ENABLED
-//         #include "/lib/clouds/cloud_vanilla.glsl"
-//     #endif
+    #ifdef SHADOW_CLOUD_ENABLED
+        #include "/lib/clouds/cloud_vanilla.glsl"
+    #endif
     
-//     #include "/lib/shadows/common.glsl"
+    #include "/lib/shadows/common.glsl"
 
-//     #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
-//         #include "/lib/shadows/cascaded/common.glsl"
-//     #else
-//         #include "/lib/shadows/distorted/common.glsl"
-//         #include "/lib/shadows/distorted/apply.glsl"
-//     #endif
-// #endif
+    #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+        #include "/lib/shadows/cascaded/common.glsl"
+    #else
+        #include "/lib/shadows/distorted/common.glsl"
+        #include "/lib/shadows/distorted/apply.glsl"
+    #endif
+#endif
 
 #if WORLD_CURVE_RADIUS > 0
     #include "/lib/world/curvature.glsl"
@@ -187,7 +172,6 @@ uniform float far;
     #if defined IS_LPV_ENABLED && (LIGHTING_MODE != LIGHTING_MODE_NONE || defined IS_LPV_SKYLIGHT_ENABLED)
         #include "/lib/lpv/lpv.glsl"
         #include "/lib/lpv/lpv_write.glsl"
-        // #include "/lib/lighting/voxel/entities.glsl"
     #endif
 
     #if LIGHTING_MODE == LIGHTING_MODE_TRACED
@@ -261,23 +245,6 @@ void main() {
         vec3 originPos = at_midBlock/64.0 + vOut.localPos;
         bool intersects = true;
 
-        // #ifdef DYN_LIGHT_FRUSTUM_TEST //&& LIGHTING_MODE != LIGHTING_MODE_NONE
-        //     vec3 lightViewPos = (gbufferModelView * vec4(originPos, 1.0)).xyz;
-
-        //     const float maxLightRange = 16.0 * Lighting_RangeF + 1.0;
-        //     //float maxRange = maxLightRange > EPSILON ? maxLightRange : 16.0;
-        //     if (lightViewPos.z > maxLightRange) intersects = false;
-        //     else if (lightViewPos.z < -(far + maxLightRange)) intersects = false;
-        //     else {
-        //         if (dot(sceneViewUp,   lightViewPos) > maxLightRange) intersects = false;
-        //         if (dot(sceneViewDown, lightViewPos) > maxLightRange) intersects = false;
-        //         if (dot(sceneViewLeft,  lightViewPos) > maxLightRange) intersects = false;
-        //         if (dot(sceneViewRight, lightViewPos) > maxLightRange) intersects = false;
-        //     }
-        // #endif
-
-        // uint lightType = StaticBlockMap[blockId].lightType;
-
         ivec3 gridCell, blockCell;
         vec3 gridPos = GetVoxelBlockPosition(originPos);
         if (GetVoxelGridCell(gridPos, gridCell, blockCell)) {
@@ -301,37 +268,5 @@ void main() {
                 }
             #endif
         }
-
-        // #ifdef IS_LPV_ENABLED
-        //     vec3 playerOffset = originPos - (eyePosition - cameraPosition);
-        //     playerOffset.y += 1.0;
-
-        //     vec3 lightColor = vec3(0.0);
-        //     float lightRange = 0.0;
-
-        //     if (lightType != LIGHT_NONE && lightType != LIGHT_IGNORED) {
-        //         StaticLightData lightInfo = StaticLightMap[lightType];
-        //         lightColor = unpackUnorm4x8(lightInfo.Color).rgb;
-        //         vec2 lightRangeSize = unpackUnorm4x8(lightInfo.RangeSize).xy;
-        //         lightRange = lightRangeSize.x * 255.0;
-
-        //         lightColor = RGBToLinear(lightColor);
-
-        //         #ifdef LIGHTING_FLICKER
-        //            vec2 lightNoise = GetDynLightNoise(cameraPosition + originPos);
-        //            ApplyLightFlicker(lightColor, lightType, lightNoise);
-        //         #endif
-        //     }
-
-        //     if (lightRange > EPSILON) {
-        //         vec3 viewDir = getCameraViewDir(gbufferModelView);
-        //         vec3 lpvPos = GetLpvCenter(cameraPosition, viewDir) + originPos;
-        //         ivec3 imgCoordPrev = GetLPVImgCoord(lpvPos) + GetLPVFrameOffset();
-
-        //         // if (clamp(imgCoordPrev, ivec3(0), ivec3(SceneLPVSize-1)) == imgCoordPrev) {
-        //             AddLpvLight(imgCoordPrev, lightColor, lightRange);
-        //         // }
-        //     }
-        // #endif
     #endif
 }

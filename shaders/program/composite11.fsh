@@ -51,7 +51,7 @@ uniform float blindnessSmooth;
 #ifdef WORLD_SKY_ENABLED
     uniform vec3 sunPosition;
     uniform float rainStrength;
-    uniform float skyRainStrength;
+    uniform float weatherStrength;
     uniform vec3 skyColor;
 #endif
 
@@ -109,6 +109,13 @@ uniform float blindnessSmooth;
 #include "/lib/lighting/fresnel.glsl"
 #include "/lib/lighting/sampling.glsl"
 
+#if LIGHTING_MODE_HAND != HAND_LIGHT_NONE
+    #include "/lib/lighting/voxel/item_light_map.glsl"
+    #include "/lib/lighting/voxel/items.glsl"
+    
+    #include "/lib/lighting/basic_hand.glsl"
+#endif
+
 #ifdef IRIS_FEATURE_SSBO
     #include "/lib/lighting/voxel/sampling.glsl"
 #endif
@@ -118,6 +125,10 @@ uniform float blindnessSmooth;
 #endif
 
 #include "/lib/utility/temporal_offset.glsl"
+
+#ifdef EFFECT_TAA_ENABLED
+    #include "/lib/effects/taa_jitter.glsl"
+#endif
 
 
 layout(location = 0) out vec4 outDiffuse;
@@ -143,6 +154,10 @@ void main() {
     #endif
 
     ivec2 iTex = ivec2(tex2 * viewSize);
+
+    #ifdef EFFECT_TAA_ENABLED
+        tex2 -= getJitterOffset(frameCounter);
+    #endif
 
     // float depth = textureLod(depthtex1, tex2, 0).r;
     float depth = texelFetch(depthtex1, iTex, 0).r;
@@ -198,34 +213,32 @@ void main() {
         float bias = GetBias_RT(viewDist);
         localPos = localNormal * bias + localPos;
 
-        vec3 blockDiffuse = vec3(0.0);
-        vec3 blockSpecular = vec3(0.0);
-        SampleDynamicLighting(blockDiffuse, blockSpecular, localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
+        vec3 diffuseFinal = vec3(0.0);
+        vec3 specularFinal = vec3(0.0);
+
+        SampleDynamicLighting(diffuseFinal, specularFinal, localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
 
         // #if LIGHTING_MODE_HAND == HAND_LIGHT_TRACED
-        //     SampleHandLight(blockDiffuse, blockSpecular, localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
+        //     SampleHandLight(diffuseFinal, specularFinal, localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
         // #endif
+
+        #if LIGHTING_MODE_HAND != HAND_LIGHT_NONE
+            SampleHandLight(diffuseFinal, specularFinal, localPos, localNormal, texNormal, albedo, roughL, metal_f0, occlusion, sss);
+        #endif
 
         #if SKY_TYPE == SKY_VANILLA
             vec4 deferredFog = unpackUnorm4x8(deferredData.b);
-            blockDiffuse *= 1.0 - deferredFog.a;
+            diffuseFinal *= 1.0 - deferredFog.a;
         #endif
 
         #if MATERIAL_SPECULAR != SPECULAR_NONE
-            #if MATERIAL_SPECULAR == SPECULAR_LABPBR
-                if (IsMetal(metal_f0))
-                    blockDiffuse *= mix(MaterialMetalBrightnessF, 1.0, rough);
-            #else
-                blockDiffuse *= mix(vec3(1.0), albedo, metal_f0 * (1.0 - roughL));
-            #endif
-
-            blockSpecular *= GetMetalTint(albedo, metal_f0);
+            ApplyMetalDarkening(diffuseFinal, specularFinal, albedo, metal_f0, roughL);
         #endif
 
-        outDiffuse = vec4(blockDiffuse, 1.0);
+        outDiffuse = vec4(diffuseFinal, 1.0);
 
         #if MATERIAL_SPECULAR != SPECULAR_NONE
-            outSpecular = vec4(blockSpecular, roughL);
+            outSpecular = vec4(specularFinal, roughL);
         #endif
     }
     else {

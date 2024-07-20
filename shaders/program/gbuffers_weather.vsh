@@ -13,11 +13,7 @@ out VertexData {
 	vec2 texcoord;
 	vec3 localPos;
 
-	// #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-	//     vec3 cloudPos;
-	// #endif
-
-	#if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+    #ifdef RENDER_SHADOWS_ENABLED
 		#if SHADOW_TYPE == SHADOW_TYPE_CASCADED
 			vec3 shadowPos[4];
 			flat int shadowTile;
@@ -27,8 +23,11 @@ out VertexData {
 	#endif
 } vOut;
 
-uniform sampler2D lightmap;
 uniform sampler2D noisetex;
+
+#if LIGHTING_MODE == LIGHTING_MODE_NONE
+	uniform sampler2D lightmap;
+#endif
 
 uniform mat4 gbufferModelView;
 uniform mat4 gbufferModelViewInverse;
@@ -36,7 +35,7 @@ uniform float frameTimeCounter;
 uniform vec3 cameraPosition;
 
 uniform float cloudHeight;
-uniform float skyRainStrength;
+uniform float weatherStrength;
 uniform ivec2 eyeBrightnessSmooth;
 
 #ifdef SKY_WEATHER_CLOUD_ONLY

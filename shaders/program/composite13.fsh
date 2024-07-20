@@ -11,7 +11,7 @@ uniform sampler2D depthtex0;
 uniform sampler2D depthtex1;
 uniform sampler2D noisetex;
 
-uniform usampler2D BUFFER_DEFERRED_DATA;
+// uniform usampler2D BUFFER_DEFERRED_DATA;
 
 #if defined WATER_CAUSTICS && defined WORLD_WATER_ENABLED && defined WORLD_SKY_ENABLED && defined IS_IRIS
     uniform sampler3D texCaustics;
@@ -82,7 +82,7 @@ uniform ivec2 eyeBrightnessSmooth;
 #ifdef WORLD_SKY_ENABLED
     uniform vec3 sunPosition;
     uniform float rainStrength;
-    uniform float skyRainStrength;
+    uniform float weatherStrength;
 
     uniform float cloudHeight;
 
@@ -139,6 +139,11 @@ uniform ivec2 eyeBrightnessSmooth;
 
 #ifdef IRIS_FEATURE_SSBO
     #include "/lib/buffers/scene.glsl"
+    
+    #ifdef WORLD_WATER_ENABLED
+        #include "/lib/buffers/water_mask.glsl"
+        #include "/lib/water/water_mask_read.glsl"
+    #endif
 
     #if LPV_SIZE > 0 || (VOLUMETRIC_BRIGHT_BLOCK > 0 && LIGHTING_MODE != LIGHTING_MODE_NONE)
         #include "/lib/buffers/block_voxel.glsl"
@@ -333,18 +338,13 @@ void main() {
             bool isWater = false;
             #if defined WORLD_WATER_ENABLED
                 #if WATER_DEPTH_LAYERS > 1
-                    isWater = true;
+                    // isWater = true;
                 #else
-                    if (isEyeInWater == 0) {
-                        // float deferredShadowA = texelFetch(BUFFER_DEFERRED_SHADOW, iTex, 0).a;
-                        uint deferredDataB = texelFetch(BUFFER_DEFERRED_DATA, iTex, 0).b;
-                        float deferredWater = unpackUnorm4x8(deferredDataB).r;
-                        isWater = deferredWater > 0.5;
-                    }
+                    if (isEyeInWater != 1)
+                        isWater = GetWaterMask(iTex);
                 #endif
             #endif
 
-            //float farMax = far;//min(shadowDistance, far) - 0.002;
             float farMax = far;
             #ifdef DISTANT_HORIZONS
                 farMax = 0.5*dhFarPlane;
@@ -365,6 +365,10 @@ void main() {
             #endif
             #if WATER_VOL_FOG_TYPE == VOL_TYPE_FANCY
                 if (isEyeInWater != 1 && isWater) hasVl = true;
+
+                #if WATER_DEPTH_LAYERS > 1
+                    hasVl = true;
+                #endif
             #endif
 
             #ifdef WORLD_WATER_ENABLED

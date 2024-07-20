@@ -113,7 +113,7 @@ uniform int heldBlockLightValue2;
     uniform vec3 sunPosition;
     uniform vec3 shadowLightPosition;
     uniform float rainStrength;
-    uniform float skyRainStrength;
+    uniform float weatherStrength;
     //uniform float wetness;
 
     uniform float cloudHeight;
@@ -302,10 +302,6 @@ uniform int heldBlockLightValue2;
     #include "/lib/lighting/reflections.glsl"
 #endif
 
-#if defined RENDER_SHADOWS_ENABLED && SHADOW_BLUR_SIZE > 0
-    #include "/lib/sampling/shadow_filter.glsl"
-#endif
-
 #ifdef WORLD_SKY_ENABLED
     #include "/lib/sky/sky_lighting.glsl"
 #endif
@@ -441,13 +437,14 @@ layout(location = 0) out vec4 outFinal;
             if (any(greaterThan(texNormal, EPSILON3)))
                 texNormal = normalize(texNormal * 2.0 - 1.0);
 
-            // vec4 deferredShadow = textureLod(BUFFER_DEFERRED_SHADOW, texcoord, 0);
+            // vec4 shadowColor = textureLod(BUFFER_DEFERRED_SHADOW, texcoord, 0);
 
             //#if WATER_DEPTH_LAYERS > 1
             //    isWater = WaterDepths[waterPixelIndex].IsWater;
             //#else
-                float deferredWater = unpackUnorm4x8(deferredData.b).r;
-                isWater = deferredWater > 0.5;
+            vec2 deferredWaterShadow = unpackUnorm4x8(deferredData.b).rg;
+            float parallaxShadow = deferredWaterShadow.g;
+            isWater = deferredWaterShadow.r > 0.5;
             //#endif
 
             #ifdef MATERIAL_REFRACT_ENABLED
@@ -488,24 +485,30 @@ layout(location = 0) out vec4 outFinal;
                 const float metal_f0 = 0.04;
             #endif
 
-            vec3 deferredShadow = vec3(1.0);
+            vec3 shadowColor = vec3(1.0);
+            float deferredSSS = 0.0;
+
             #if defined RENDER_SHADOWS_ENABLED && SHADOW_BLUR_SIZE > 0 && !defined EFFECT_TAA_ENABLED
                 #ifdef SHADOW_COLORED
-                    deferredShadow = shadow_GaussianFilterRGB(texcoord, depthTransL);
+                    shadowColor = shadow_GaussianFilterRGB(texcoord, depthTransL);
                 #else
-                    deferredShadow = vec3(shadow_GaussianFilter(texcoord, depthTransL));
+                    shadowColor = vec3(shadow_GaussianFilter(texcoord, depthTransL));
                 #endif
+
+                deferredSSS = textureLod(BUFFER_DEFERRED_SHADOW, texcoord, 0).a;
             #else
-                deferredShadow = textureLod(BUFFER_DEFERRED_SHADOW, texcoord, 0).rgb;
+                vec4 deferredShadowSss = textureLod(BUFFER_DEFERRED_SHADOW, texcoord, 0);
+                shadowColor = deferredShadowSss.rgb;
+                deferredSSS = deferredShadowSss.a;
             #endif
 
-            #if defined WORLD_SKY_ENABLED && defined RENDER_CLOUD_SHADOWS_ENABLED
-                #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                    deferredShadow *= TraceCloudShadow(cameraPosition + localPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
-                // #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
-                //     shadow *= SampleCloudShadow(localSkyLightDirection, cloudPos);
-                #endif
-            #endif
+            // #if defined WORLD_SKY_ENABLED && defined RENDER_CLOUD_SHADOWS_ENABLED
+            //     #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+            //         shadowColor *= TraceCloudShadow(cameraPosition + localPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+            //     // #elif SKY_CLOUD_TYPE == CLOUDS_VANILLA
+            //     //     shadow *= SampleCloudShadow(localSkyLightDirection, cloudPos);
+            //     #endif
+            // #endif
 
             float occlusion = deferredLighting.z;
             float emission = deferredLighting.a;
@@ -541,12 +544,12 @@ layout(location = 0) out vec4 outFinal;
                         #endif
                     #endif
                 #elif LIGHTING_MODE == LIGHTING_MODE_FLOODFILL
-                    GetFloodfillLighting(diffuseFinal, specularFinal, localPos, localNormal, texNormal, deferredLighting.xy, deferredShadow, albedo, metal_f0, roughL, occlusion, sss, tir);
+                    GetFloodfillLighting(diffuseFinal, specularFinal, localPos, localNormal, texNormal, deferredLighting.xy, shadowColor, albedo, metal_f0, roughL, occlusion, sss, tir);
                 #endif
 
                 diffuseFinal += emission * MaterialEmissionF;
             #else
-                GetVanillaLighting(diffuseFinal, deferredLighting.xy, occlusion);
+                GetVanillaLighting(diffuseFinal, deferredLighting.xy, shadowColor, occlusion);
             #endif
 
             #if LIGHTING_MODE_HAND != HAND_LIGHT_NONE
@@ -555,19 +558,42 @@ layout(location = 0) out vec4 outFinal;
 
             #if defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
                 const bool tir = false; // TODO: ?
-                GetSkyLightingFinal(diffuseFinal, specularFinal, deferredShadow, localPos, localNormal, texNormal, albedo, deferredLighting.xy, roughL, metal_f0, occlusion, sss, tir);
+                bool isUnderWater = isEyeInWater == 1;
+                GetSkyLightingFinal(diffuseFinal, specularFinal, shadowColor, localPos, localNormal, texNormal, albedo, deferredLighting.xy, roughL, metal_f0, occlusion, sss, isUnderWater, tir);
             #else
                 diffuseFinal += WorldAmbientF * occlusion;
             #endif
 
+            #if MATERIAL_SSS != 0 && defined RENDER_SHADOWS_ENABLED
+                vec3 skyLightColor = CalculateSkyLightWeatherColor(WorldSkyLightColor);
+                vec3 sssFinal = deferredSSS * MaterialSssStrengthF * skyLightColor;
+
+                vec2 uvSky = DirectionToUV(localViewDir);
+                float sssSkyLight = 0.1 * _pow3(deferredLighting.y);
+                vec3 sssSkyColor = textureLod(texSkyIrradiance, uvSky, 0).rgb;
+                sssFinal += sssSkyColor * (sss * occlusion * sssSkyLight * Sky_BrightnessF);
+
+                // vec3 sssColor = vec3(1.0);
+                // if (any(greaterThan(albedo, EPSILON3)))
+                //     sssColor = normalize(albedo);
+                // sssFinal *= sssColor;
+
+                diffuseFinal += sssFinal;
+            #endif
+
             #if MATERIAL_SPECULAR != SPECULAR_NONE
-                if (metal_f0 >= 0.5) {
-                    diffuseFinal *= mix(MaterialMetalBrightnessF, 1.0, roughL);
-                    specularFinal *= albedo;
-                }
+                ApplyMetalDarkening(diffuseFinal, specularFinal, albedo, metal_f0, roughL);
             #endif
 
             diffuseFinal *= deferredColor.a;
+
+            vec3 f0 = GetMaterialF0(albedo, metal_f0);
+            if (isWater) f0 = vec3(0.02);
+
+            float skyNoVm = max(dot(texNormal, -localViewDir), 0.0);
+            vec3 skyF = F_schlickRough(skyNoVm, f0, roughL);
+            deferredColor.a = clamp(deferredColor.a, maxOf(skyF) * MaterialReflectionStrength, 1.0);
+            //albedo *= 1.0 - skyF;
 
             #if LIGHTING_MODE == LIGHTING_MODE_TRACED
                 diffuseFinal += sampleDiffuse;
@@ -761,19 +787,31 @@ layout(location = 0) out vec4 outFinal;
             vec3 localSunDirection = normalize(mat3(gbufferModelViewInverse) * sunPosition);
         #endif
 
+        // #ifdef WORLD_WATER_ENABLED
+        //     vec3 ambientWaterTint = exp(-12.0 * WaterDensityF * WaterAbsorbF);
+
+        //     if (isWater && isEyeInWater != 1) opaqueFinal *= ambientWaterTint;
+        // #endif
+
         if (isWater) {
             if (tir) final.a = 1.0;
         }
-        // else {
-        //     vec3 tint = albedo;
-        //     if (any(greaterThan(tint, EPSILON3)))
-        //         tint = normalize(tint) * 1.7;
+        else {
+            vec3 tint = albedo;
+            if (any(greaterThan(tint, EPSILON3)))
+                tint = normalize(tint) * 1.7;
 
-        //     tint = mix(tint, vec3(1.0), pow(1.0 - final.a, 3.0));
-        //     opaqueFinal *= tint;
-        // }
+            tint = mix(tint, vec3(1.0), pow(1.0 - final.a, 3.0));
+            opaqueFinal *= tint;
+        }
 
         final.rgb += opaqueFinal * (1.0 - final.a);
+
+        #ifdef WORLD_WATER_ENABLED
+            if (isEyeInWater == 1) {
+                final.rgb *= exp(-WaterAmbientDepth * WaterDensityF * WaterAbsorbF);
+            }
+        #endif
 
         #if defined WORLD_WATER_ENABLED && WATER_VOL_FOG_TYPE == VOL_TYPE_FAST && WATER_DEPTH_LAYERS == 1
             if (isEyeInWater == 1) {
@@ -899,7 +937,7 @@ layout(location = 0) out vec4 outFinal;
                     vec3 vlLight = vec3(0.0);
 
                     #ifdef WORLD_SKY_ENABLED
-                        vec3 skyLightColor = WorldSkyLightColor * (1.0 - 0.8 * skyRainStrength);
+                        vec3 skyLightColor = WorldSkyLightColor * (1.0 - 0.8 * weatherStrength);
 
                         float skyLightF = eyeBrightnessSmooth.y / 240.0;
                         skyLightF = _pow2(skyLightF);

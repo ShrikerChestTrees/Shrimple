@@ -14,7 +14,7 @@ uniform sampler2D gtexture;
 
 uniform int renderStage;
 uniform float rainStrength;
-uniform float skyRainStrength;
+uniform float weatherStrength;
 uniform int frameCounter;
 
 #ifndef IRIS_FEATURE_SSBO
@@ -74,7 +74,7 @@ void main() {
         #if SKY_TYPE == SKY_TYPE_CUSTOM
             color.rgb *= 10.0 * WorldSunLightColor * Sky_SunBrightnessF;
         #elif SKY_TYPE == SKY_TYPE_VANILLA
-            color.rgb *= 10.0 * Sky_BrightnessF;
+            color.rgb *= 2.0 * Sky_BrightnessF;
         #endif
 
         color.rgb *= smoothstep(-0.1, 0.1, localSunDirection.y);

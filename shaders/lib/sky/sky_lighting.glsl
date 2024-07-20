@@ -16,11 +16,10 @@ float GetSkyDiffuseLighting(const in vec3 localViewDir, const in vec3 localSkyLi
     float diffuseNoVm = max(dot(texNormal, localViewDir), 0.0);
     float diffuseLoHm = max(dot(localSkyLightDir, H), 0.0);
 
-    float D = SampleLightDiffuse(diffuseNoVm, diffuseNoLm, diffuseLoHm, roughL);
-    return D * mix(1.0, MaterialSssStrengthF, sss);
+    return SampleLightDiffuse(diffuseNoVm, diffuseNoLm, diffuseLoHm, roughL);
 }
 
-void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 shadowColor, const in vec3 localPos, const in vec3 localNormal, const in vec3 texNormal, const in vec3 albedo, const in vec2 lmcoord, const in float roughL, const in float metal_f0, const in float occlusion, const in float sss, const in bool tir) {
+void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 shadowColor, const in vec3 localPos, const in vec3 localNormal, const in vec3 texNormal, const in vec3 albedo, const in vec2 lmcoord, const in float roughL, const in float metal_f0, const in float occlusion, const in float sss, const in bool isUnderWater, const in bool tir) {
     float viewDist = length(localPos);
     vec3 localViewDir = -localPos / viewDist;
 
@@ -58,7 +57,7 @@ void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 
     float horizonF = min(abs(localSunDirection.y + 0.1), 1.0);
     horizonF = pow(1.0 - horizonF, 8.0);
 
-    float ambientF = mix(Lighting_AmbientF, 1.0, pow(skyRainStrength, 0.75));
+    float ambientF = mix(Lighting_AmbientF, 1.0, pow(weatherStrength, 0.75));
     ambientF = mix(ambientF, max(1.0, ambientF), horizonF);
 
     vec3 skyLightShadowColor = shadowColor * CalculateSkyLightWeatherColor(WorldSkyLightColor);
@@ -70,7 +69,7 @@ void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 
     vec3 H = normalize(localSkyLightDir + localViewDir);
     vec3 accumDiffuse = GetSkyDiffuseLighting(localViewDir, localSkyLightDir, geoNoL, texNormal, H, roughL, sss) * (1.0 - ambientF) * skyLightShadowColor;
 
-    vec3 ambientSkyLight = vec3(_pow3(lmcoord.y));
+    vec3 ambientSkyLight = vec3(_pow2(lmcoord.y));
 
     #if defined IS_LPV_SKYLIGHT_ENABLED && !defined RENDER_CLOUDS
         vec3 lpvPos = GetLPVPosition(localPos);
@@ -93,7 +92,7 @@ void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 
     vec3 ambientSkyLight_indirect = textureLod(texSkyIrradiance, uvSky, 0).rgb;
     ambientSkyLight_indirect *= saturate(texNormal.y + 1.0) * 0.8 + 0.2;
 
-    ambientSkyLight *= ambientSkyLight_indirect;
+    ambientSkyLight *= 3.0*ambientSkyLight_indirect;
 
     #if defined IS_LPV_SKYLIGHT_ENABLED && LPV_SKYLIGHT == LPV_SKYLIGHT_FANCY && !defined RENDER_CLOUDS
         vec3 lpvSkyLightColor = GetLpvBlockLight(lpvSample);
@@ -103,14 +102,14 @@ void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 
 
     accumDiffuse += ambientSkyLight * (occlusion * ambientF);
 
-    #if MATERIAL_SPECULAR != SPECULAR_NONE
-        #if MATERIAL_SPECULAR == SPECULAR_LABPBR
-            if (IsMetal(metal_f0))
-                accumDiffuse *= mix(MaterialMetalBrightnessF, 1.0, roughL);
-        #else
-            accumDiffuse *= mix(vec3(1.0), albedo, metal_f0 * (1.0 - roughL));
-        #endif
-    #endif
+    // #if MATERIAL_SPECULAR != SPECULAR_NONE
+    //     #if MATERIAL_SPECULAR == SPECULAR_LABPBR
+    //         if (IsMetal(metal_f0))
+    //             accumDiffuse *= mix(MaterialMetalBrightnessF, 1.0, roughL);
+    //     #else
+    //         accumDiffuse *= mix(vec3(1.0), albedo, metal_f0 * (1.0 - roughL));
+    //     #endif
+    // #endif
 
     #if MATERIAL_SPECULAR != SPECULAR_NONE && !defined RENDER_CLOUDS
         #ifndef RENDER_SHADOWS_ENABLED
@@ -124,6 +123,12 @@ void GetSkyLightingFinal(inout vec3 skyDiffuse, inout vec3 skySpecular, in vec3 
         #endif
 
         vec3 f0 = GetMaterialF0(albedo, metal_f0);
+
+        if (isUnderWater) {
+            vec3 ior = F0ToIor(f0, vec3(1.0));
+            f0 = IorToF0(ior, vec3(1.33));
+        }
+
         float skyVoHm = max(dot(localViewDir, H), 0.0);
         vec3 skyF = F_schlickRough(skyVoHm, f0, roughL);
 

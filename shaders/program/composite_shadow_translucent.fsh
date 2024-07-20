@@ -1,6 +1,7 @@
-#define RENDER_SCREEN_SHADOWS
-#define RENDER_DEFERRED
+#define RENDER_SHADOW_TRANSLUCENT
+#define RENDER_COMPOSITE
 #define RENDER_FRAG
+#define RENDER_TRANSLUCENT
 
 #include "/lib/constants.glsl"
 #include "/lib/common.glsl"
@@ -8,11 +9,13 @@
 in vec2 texcoord;
 
 #ifdef RENDER_SHADOWS_ENABLED
+    uniform sampler2D depthtex0;
     uniform sampler2D depthtex1;
     uniform sampler2D depthtex2;
 
     #ifdef DISTANT_HORIZONS
-        uniform sampler2D dhDepthTex;
+        uniform sampler2D dhDepthTex0;
+        uniform sampler2D dhDepthTex1;
     #endif
 
     uniform usampler2D BUFFER_DEFERRED_DATA;
@@ -25,7 +28,7 @@ in vec2 texcoord;
 
     #ifdef SHADOW_ENABLE_HWCOMP
         #ifdef IRIS_FEATURE_SEPARATE_HARDWARE_SAMPLERS
-            uniform sampler2DShadow shadowtex1HW;
+            uniform sampler2DShadow shadowtex0HW;
         #else
             uniform sampler2DShadow shadow;
         #endif
@@ -68,7 +71,7 @@ in vec2 texcoord;
 
     #if defined WORLD_SKY_ENABLED //&& defined SHADOW_CLOUD_ENABLED
         uniform vec3 eyePosition;
-        uniform float skyRainStrength;
+        uniform float weatherStrength;
         uniform float cloudHeight;
         uniform float cloudTime;
     #endif
@@ -106,6 +109,14 @@ in vec2 texcoord;
         #include "/lib/shadows/distorted/render.glsl"
     #endif
 
+    #if MATERIAL_SSS != 0
+        #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+            #include "/lib/shadows/cascaded/render_sss.glsl"
+        #else
+            #include "/lib/shadows/distorted/render_sss.glsl"
+        #endif
+    #endif
+
     #ifdef EFFECT_TAA_ENABLED
         #include "/lib/effects/taa_jitter.glsl"
     #endif
@@ -121,43 +132,61 @@ void main() {
     #ifdef RENDER_SHADOWS_ENABLED
         vec2 coord = texcoord;
 
-        // #ifdef EFFECT_TAA_ENABLED
-        //     coord -= getJitterOffset(frameCounter);
-        // #endif
+        #ifdef EFFECT_TAA_ENABLED
+            vec2 jitterOffset = getJitterOffset(frameCounter);
+            coord -= jitterOffset;
+        #endif
 
-        float depth = textureLod(depthtex1, texcoord, 0).r;
+        float depthTrans = textureLod(depthtex0, texcoord, 0).r;
+        float depthOpaque = textureLod(depthtex1, texcoord, 0).r;
         float depthHand = textureLod(depthtex2, texcoord, 0).r;
-        bool isHand = depthHand > depth + EPSILON;
+        bool isHand = false;//depthHand > depthTrans + EPSILON;
 
         if (isHand) {
-            depth = depth * 2.0 - 1.0;
-            depth /= MC_HAND_DEPTH;
-            depth = depth * 0.5 + 0.5;
+            depthTrans = depthTrans * 2.0 - 1.0;
+            depthTrans /= MC_HAND_DEPTH;
+            depthTrans = depthTrans * 0.5 + 0.5;
+
+            depthOpaque = depthOpaque * 2.0 - 1.0;
+            depthOpaque /= MC_HAND_DEPTH;
+            depthOpaque = depthOpaque * 0.5 + 0.5;
         }
 
-        #ifdef DISTANT_HORIZONS
-            float dhDepth = textureLod(dhDepthTex, texcoord, 0).r;
-            float dhDepthL = linearizeDepth(dhDepth, dhNearPlane, dhFarPlane);
-            float depthL = linearizeDepth(depth, near, farPlane);
-            mat4 projectionInv = gbufferProjectionInverse;
+        float depthTransL = linearizeDepth(depthTrans, near, farPlane);
+        float depthOpaqueL = linearizeDepth(depthOpaque, near, farPlane);
+        mat4 projectionInv = gbufferProjectionInverse;
 
-            if (depth >= 1.0 || (dhDepthL < depthL && dhDepth > 0.0)) {
+        #ifdef DISTANT_HORIZONS
+            float dhDepthTrans = textureLod(dhDepthTex0, texcoord, 0).r;
+            float dhDepthTransL = linearizeDepth(dhDepthTrans, dhNearPlane, dhFarPlane);
+
+            if (depthTrans >= 1.0 || (dhDepthTransL < depthTransL && dhDepthTrans > 0.0)) {
                 projectionInv = dhProjectionInverse;
-                depthL = dhDepthL;
-                depth = dhDepth;
+                depthTransL = dhDepthTransL;
+                depthTrans = dhDepthTrans;
+            }
+
+            float dhDepthOpaque = textureLod(dhDepthTex1, texcoord, 0).r;
+            float dhDepthOpaqueL = linearizeDepth(dhDepthOpaque, dhNearPlane, dhFarPlane);
+
+            if (depthOpaque >= 1.0 || (dhDepthOpaqueL < depthOpaqueL && dhDepthOpaque > 0.0)) {
+                // projectionInv = dhProjectionInverse;
+                depthOpaqueL = dhDepthOpaqueL;
+                //depthOpaque = dhDepthOpaque;
             }
         #endif
 
         vec3 shadowFinal = vec3(1.0);
+        float sssFinal = 0.0;
 
-        if (depth < 1.0) {
+        if (depthTransL < depthOpaqueL) {
             #ifdef EFFECT_TAA_ENABLED
                 float dither = InterleavedGradientNoiseTime();
             #else
                 float dither = InterleavedGradientNoise();
             #endif
 
-            vec3 clipPosStart = vec3(coord, depth);
+            vec3 clipPosStart = vec3(coord, depthTrans);
 
             #ifdef DISTANT_HORIZONS
                 vec3 viewPos = unproject(projectionInv, clipPosStart * 2.0 - 1.0);
@@ -165,13 +194,13 @@ void main() {
                 vec3 viewPos = unproject(gbufferProjectionInverse, clipPosStart * 2.0 - 1.0);
             #endif
 
-            float sss = 0.0;
+            // float sss = 0.0;
             ivec2 uv = ivec2(texcoord * viewSize);
             uvec4 deferredData = texelFetch(BUFFER_DEFERRED_DATA, uv, 0);
             vec3 localNormal = unpackUnorm4x8(deferredData.r).rgb;
-            #if MATERIAL_SSS != 0
-                sss = unpackUnorm4x8(deferredData.r).w;
-            #endif
+            // #if MATERIAL_SSS != 0
+            //     sss = unpackUnorm4x8(deferredData.r).w;
+            // #endif
 
             if (any(greaterThan(localNormal, EPSILON3)))
                 localNormal = normalize(localNormal * 2.0 - 1.0);
@@ -200,73 +229,85 @@ void main() {
                 // float lmShadow = pow(lmFinal.y, 9);
                 // if (shadowPos == clamp(shadowPos, -0.85, 0.85)) lmShadow = 1.0;
 
+                float offsetBias = GetShadowOffsetBias(shadowPos, geoNoL);
                 float zRange = GetShadowRange();
             #endif
 
-            // #ifdef SHADOW_COLORED
-            //     if (shadowFade < 1.0)
-            //         shadowFinal = GetFinalShadowColor(localSkyLightDirection, shadowFade, sss);
-
-            //     // shadowFinal = min(shadowFinal, vec3(lmShadow));
-            // #else
-            //     float shadowF = 1.0;
-            //     if (shadowFade < 1.0)
-            //         shadowF = GetFinalShadowFactor(localSkyLightDirection, shadowFade, sss);
-                
-            //     //shadowF = min(shadowF, lmShadow);
-            //     shadowFinal = vec3(shadowF);
-            // #endif
-
-            // vec2 sssOffset = hash22(vec2(dither, 0.0)) - 0.5;
-            // sssOffset *= sss * _pow2(dither) * MATERIAL_SSS_SCATTER;
-            
-            float sssBias = 0.0;
             #if MATERIAL_SSS != 0
-                sssBias = sss * MATERIAL_SSS_MAXDIST / zRange;
+                float sss = unpackUnorm4x8(deferredData.r).w;
+
+                #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+                    if (cascadeIndex >= 0) {
+                        sssFinal = GetSssFactor(shadowPos[cascadeIndex], cascadeIndex, sss);
+                    }
+                #else
+                    sssFinal = GetSssFactor(shadowPos, offsetBias, sss);
+                #endif
+
+                // sssFinal *= step(geoNoL, 0.0);
+                sssFinal *= 1.0 - 0.5*(1.0 - max(geoNoL, 0.0));
             #endif
 
-            #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+            if (geoNoL > 0.0) {
+                // #ifdef SHADOW_COLORED
+                //     if (shadowFade < 1.0)
+                //         shadowFinal = GetFinalShadowColor(localSkyLightDirection, shadowFade, sss);
+
+                //     // shadowFinal = min(shadowFinal, vec3(lmShadow));
+                // #else
+                //     float shadowF = 1.0;
+                //     if (shadowFade < 1.0)
+                //         shadowF = GetFinalShadowFactor(localSkyLightDirection, shadowFade, sss);
+                    
+                //     //shadowF = min(shadowF, lmShadow);
+                //     shadowFinal = vec3(shadowF);
+                // #endif
+
+                // vec2 sssOffset = hash22(vec2(dither, 0.0)) - 0.5;
+                // sssOffset *= sss * _pow2(dither) * MATERIAL_SSS_SCATTER;
+
                 vec3 shadowSample = vec3(1.0);
-
-                if (cascadeIndex >= 0) {
+                #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
+                    if (cascadeIndex >= 0) {
+                        #ifdef SHADOW_COLORED
+                            shadowSample = GetShadowColor(shadowPos[cascadeIndex], cascadeIndex);
+                        #else
+                            shadowSample = vec3(GetShadowFactor(shadowPos[cascadeIndex], cascadeIndex));
+                        #endif
+                    }
+                #else
                     #ifdef SHADOW_COLORED
-                        shadowSample = GetShadowColor(shadowPos[cascadeIndex], cascadeIndex, sssBias);
+                        shadowSample = GetShadowColor(shadowPos, offsetBias);
                     #else
-                        shadowSample = vec3(GetShadowFactor(shadowPos[cascadeIndex], cascadeIndex, sssBias));
+                        shadowSample = vec3(GetShadowFactor(shadowPos, offsetBias));
                     #endif
-                }
-            #else
-                float offsetBias = GetShadowOffsetBias(shadowPos, geoNoL);
-
-                #ifdef SHADOW_COLORED
-                    vec3 shadowSample = GetShadowColor(shadowPos, offsetBias, sssBias);
-                #else
-                    vec3 shadowSample = vec3(GetShadowFactor(shadowPos, offsetBias, sssBias));
-                #endif
-            #endif
-
-            shadowFinal *= mix(step(0.0, geoNoL), 1.0, sss);
-            shadowFinal *= mix(shadowSample, vec3(step(0.0, geoNoL)), shadowFade);
-
-            #if defined WORLD_SKY_ENABLED && defined RENDER_CLOUD_SHADOWS_ENABLED
-                float cloudShadow = 1.0;
-
-                #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                    vec3 worldPos = cameraPosition + localPos;
-                    cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
-                #else
-                    vec2 cloudOffset = GetCloudOffset();
-                    vec3 camOffset = GetCloudCameraOffset();
-                    //vec3 worldPos = cameraPosition + localPos;
-                    //float cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
-                    cloudShadow = SampleCloudShadow(localPos, localSkyLightDirection, cloudOffset, camOffset, 0.5);
                 #endif
 
-                shadowFinal *= cloudShadow * 0.5 + 0.5;
-            #endif
+                // shadowSample = vec3(1.0, 0.0, 0.0);
 
-            #ifdef SHADOW_SCREEN
-                if (geoNoL > 0.0) {
+                // shadowFinal *= mix(step(0.0, geoNoL), 1.0, sss);
+                // shadowFinal *= step(0.0, geoNoL);
+                shadowFinal *= mix(shadowSample, vec3(step(0.0, geoNoL)), shadowFade);
+                // shadowFinal = shadowSample;
+
+                #if defined WORLD_SKY_ENABLED && defined RENDER_CLOUD_SHADOWS_ENABLED
+                    float cloudShadow = 1.0;
+
+                    #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
+                        vec3 worldPos = cameraPosition + localPos;
+                        cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+                    #else
+                        vec2 cloudOffset = GetCloudOffset();
+                        vec3 camOffset = GetCloudCameraOffset();
+                        //vec3 worldPos = cameraPosition + localPos;
+                        //float cloudShadow = TraceCloudShadow(worldPos, localSkyLightDirection, CLOUD_SHADOW_STEPS);
+                        cloudShadow = SampleCloudShadow(localPos, localSkyLightDirection, cloudOffset, camOffset, 0.5);
+                    #endif
+
+                    shadowFinal *= cloudShadow * 0.5 + 0.5;
+                #endif
+
+                #ifdef SHADOW_SCREEN
                     float viewDist = length(viewPos);
                     vec3 lightViewDir = mat3(gbufferModelView) * localSkyLightDirection;
                     vec3 endViewPos = lightViewDir * viewDist * 0.1 + viewPos;
@@ -280,10 +321,15 @@ void main() {
                     #endif
 
                     vec3 traceScreenDir = normalize(clipPosEnd - clipPosStart);
+                    
+                    #ifdef EFFECT_TAA_ENABLED
+                        clipPosStart.xy += jitterOffset;
+                    #endif
 
                     vec3 traceScreenStep = traceScreenDir * pixelSize.y;
                     vec2 traceScreenDirAbs = abs(traceScreenDir.xy);
-                    traceScreenStep /= (traceScreenDirAbs.y > 0.5 * aspectRatio ? traceScreenDirAbs.y : traceScreenDirAbs.x);
+                    // traceScreenStep /= (traceScreenDirAbs.y > 0.5 * aspectRatio ? traceScreenDirAbs.y : traceScreenDirAbs.x);
+                    traceScreenStep /= mix(traceScreenDirAbs.x, traceScreenDirAbs.y, traceScreenDirAbs.y);
 
                     vec3 traceScreenPos = clipPosStart;
                     traceScreenStep *= 1.0 + dither;
@@ -299,7 +345,7 @@ void main() {
                         if (saturate(traceScreenPos) != traceScreenPos) break;
 
                         ivec2 sampleUV = ivec2(traceScreenPos.xy * viewSize);
-                        float sampleDepth = texelFetch(depthtex1, sampleUV, 0).r;
+                        float sampleDepth = texelFetch(depthtex0, sampleUV, 0).r;
                         float sampleDepthHand = texelFetch(depthtex2, sampleUV, 0).r;
                         bool isSampleHand = sampleDepthHand > sampleDepth + EPSILON;
 
@@ -314,7 +360,7 @@ void main() {
                         float sampleDepthL = linearizeDepth(sampleDepth, near, farPlane);
 
                         #ifdef DISTANT_HORIZONS
-                            float dhSampleDepth = texelFetch(dhDepthTex, sampleUV, 0).r;
+                            float dhSampleDepth = texelFetch(dhDepthTex0, sampleUV, 0).r;
                             float dhSampleDepthL = linearizeDepth(dhSampleDepth, dhNearPlane, dhFarPlane);
 
                             if (sampleDepth >= 1.0 || (dhSampleDepthL < sampleDepthL && dhSampleDepth > 0.0)) {
@@ -341,14 +387,17 @@ void main() {
                     }
 
                     if (traceDist > 0.0) {
-                        float sss_offset = 0.5 * dither * sss * saturate(1.0 - traceDist / MATERIAL_SSS_MAXDIST);
-                        shadowFinal *= shadowTrace * (1.0 - sss_offset) + sss_offset;
+                        //float sss_offset = 0.5 * dither * sss * saturate(1.0 - traceDist / MATERIAL_SSS_MAXDIST);
+                        shadowFinal *= shadowTrace;// * (1.0 - sss_offset) + sss_offset;
                     }
-                }
-            #endif
+                #endif
+            }
+            else {
+                shadowFinal = vec3(0.0);
+            }
         }
 
-        outShadow = vec4(shadowFinal, 1.0);
+        outShadow = vec4(shadowFinal, sssFinal);
     #else
         outShadow = vec4(1.0);
     #endif

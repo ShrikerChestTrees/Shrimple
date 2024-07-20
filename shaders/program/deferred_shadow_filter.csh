@@ -1,4 +1,4 @@
-#define RENDER_DEFERRED_SSAO
+#define RENDER_DEFERRED_SHADOW_FILTER
 #define RENDER_DEFERRED
 #define RENDER_COMPUTE
 
@@ -13,12 +13,12 @@ const int sharedBufferRes = 20;
 const int sharedBufferSize = _pow2(sharedBufferRes);
 
 shared float gaussianBuffer[5];
-shared float sharedOcclusionBuffer[sharedBufferSize];
+shared vec4 sharedShadowBuffer[sharedBufferSize];
 shared float sharedDepthBuffer[sharedBufferSize];
 
-layout(r16f) uniform image2D imgSSAO;
+layout(rgba8) uniform image2D imgShadowSSS;
 
-uniform sampler2D BUFFER_SSAO;
+uniform sampler2D BUFFER_DEFERRED_SHADOW;
 uniform sampler2D depthtex0;
 
 #ifdef DISTANT_HORIZONS
@@ -40,7 +40,7 @@ uniform float farPlane;
 
 
 const float g_sigmaXY = 9.0;
-const float g_sigmaV = 0.2;
+const float g_sigmaV = 2.0;
 
 void populateSharedBuffer() {
     if (gl_LocalInvocationIndex < 5)
@@ -63,9 +63,9 @@ void populateSharedBuffer() {
 	    ivec2 uv = uv_base + uv_i;
 
 	    float depthL = far;
-	    float occlusion = 1.0;
+	    vec4 shadowSSS = vec4(vec3(1.0), 0.0);
 	    if (all(greaterThanEqual(uv, ivec2(0))) && all(lessThan(uv, ivec2(viewSize + 0.5)))) {
-	    	occlusion = texelFetch(BUFFER_SSAO, uv, 0).r;
+	    	shadowSSS = texelFetch(BUFFER_DEFERRED_SHADOW, uv, 0);
 	    	float depth = texelFetch(depthtex0, uv, 0).r;
 	    	depthL = linearizeDepth(depth, near, farPlane);
 
@@ -80,30 +80,27 @@ void populateSharedBuffer() {
             #endif
 	    }
 
-    	sharedOcclusionBuffer[i_shared] = occlusion;
+    	sharedShadowBuffer[i_shared] = shadowSSS;
     	sharedDepthBuffer[i_shared] = depthL;
     }
 }
 
-float sampleSharedBuffer(const in float depthL) {
-	// ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
-	// return texelFetch(BUFFER_SSAO, uv, 0).r;
-
+vec4 sampleSharedBuffer(const in float depthL) {
     ivec2 uv_base = ivec2(gl_LocalInvocationID.xy) + 2;
 
     float total = 0.0;
-    float accum = 0.0;
+    vec4 accum = vec4(0.0);
     
     for (int iy = -2; iy <= 2; iy++) {
-        float fy = gaussianBuffer[iy+2];// Gaussian(g_sigmaXY, iy);
+        float fy = gaussianBuffer[iy+2];
 
         for (int ix = -2; ix <= 2; ix++) {
-            float fx = gaussianBuffer[ix+2];// Gaussian(g_sigmaXY, ix);
+            float fx = gaussianBuffer[ix+2];
             
             ivec2 uv_shared = uv_base + ivec2(ix, iy);
             int i_shared = uv_shared.y * sharedBufferRes + uv_shared.x;
 
-            float sampleValue = sharedOcclusionBuffer[i_shared];
+            vec4 sampleValue = sharedShadowBuffer[i_shared];
             float sampleDepthL = sharedDepthBuffer[i_shared];
             
             float fv = Gaussian(g_sigmaV, abs(sampleDepthL - depthL));
@@ -114,7 +111,7 @@ float sampleSharedBuffer(const in float depthL) {
         }
     }
     
-    if (total <= EPSILON) return 1.0;
+    if (total <= EPSILON) return vec4(vec3(1.0), 0.0);
     return accum / total;
 }
 
@@ -123,6 +120,9 @@ void main() {
 	ivec2 uv = ivec2(gl_GlobalInvocationID.xy);
 
     populateSharedBuffer();
+
+    // memoryBarrierShared();
+    // memoryBarrier();
     barrier();
 
 	if (any(greaterThanEqual(uv, ivec2(viewSize)))) return;
@@ -131,6 +131,6 @@ void main() {
     int i_shared = uv_shared.y * sharedBufferRes + uv_shared.x;
 	float depthL = sharedDepthBuffer[i_shared];
 
-	float occlusion = sampleSharedBuffer(depthL);
-	imageStore(imgSSAO, uv, vec4(occlusion));
+	vec4 shadowSSS = sampleSharedBuffer(depthL);
+	imageStore(imgShadowSSS, uv, shadowSSS);
 }

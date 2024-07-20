@@ -10,11 +10,19 @@ void GetFloodfillLighting(inout vec3 blockDiffuse, inout vec3 blockSpecular, con
     float lpvFade = 0.0;
     vec3 lpvLight = vec3(0.0);
     if (clamp(lpvPos, ivec3(0), SceneLPVSize - 1) == lpvPos) {
-        vec4 lpvSample = SampleLpv(lpvPos, localNormal, texNormal);
+        vec3 samplePos = GetLpvSamplePos(lpvPos, localNormal, texNormal);
+        vec4 lpvSample = SampleLpv(samplePos);
         lpvFade = GetLpvFade(lpvPos);
         lpvFade = _smoothstep(lpvFade);
 
+        #ifdef LPV_AO_FIX
+            vec4 lpvSampleN = SampleLpvNearest(ivec3(samplePos));
+            lpvSampleN.rgb = RGBToLinear(lpvSampleN.rgb);
+            lpvSample.rgb = max(lpvSample.rgb, 0.5 * lpvSampleN.rgb);
+        #endif
+
         lpvLight = GetLpvBlockLight(lpvSample);
+        // lpvLight = GetLpvBlockLight(lpvSample, lmcoord.x);
     }
 
     blockDiffuse += mix(lmBlockLight, lpvLight, lpvFade) * occlusion;

@@ -47,8 +47,8 @@ uniform float far;
 #endif
 
 
-#if defined DEFERRED_BUFFER_ENABLED && defined DEFER_TRANSLUCENT
-    /* RENDERTARGETS: 1 */
+#if defined DEFERRED_BUFFER_ENABLED //&& defined DEFER_TRANSLUCENT
+    /* RENDERTARGETS: 15 */
 #else
     /* RENDERTARGETS: 0 */
 #endif

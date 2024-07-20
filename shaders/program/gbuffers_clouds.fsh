@@ -73,7 +73,7 @@ uniform float fogEnd;
 uniform int isEyeInWater;
 uniform ivec2 eyeBrightnessSmooth;
 uniform float rainStrength;
-uniform float skyRainStrength;
+uniform float weatherStrength;
 uniform float blindnessSmooth;
 
 uniform vec3 skyColor;
@@ -316,19 +316,19 @@ void main() {
     const float sss = 1.0;
 
     vec3 shadowColor = vec3(1.0);
-    #ifdef RENDER_SHADOWS_ENABLED
-        #ifndef IRIS_FEATURE_SSBO
-            vec3 localSkyLightDirection = normalize(mat3(gbufferModelViewInverse) * shadowLightPosition);
-        #endif
+    // #ifdef RENDER_SHADOWS_ENABLED
+    //     #ifndef IRIS_FEATURE_SSBO
+    //         vec3 localSkyLightDirection = normalize(mat3(gbufferModelViewInverse) * shadowLightPosition);
+    //     #endif
     
-        float shadowFade = smoothstep(shadowDistance - 20.0, shadowDistance + 20.0, viewDist);
+    //     float shadowFade = smoothstep(shadowDistance - 20.0, shadowDistance + 20.0, viewDist);
 
-        #ifdef SHADOW_COLORED
-            shadowColor = GetFinalShadowColor(localSkyLightDirection, shadowFade, sss);
-        #else
-            shadowColor = vec3(GetFinalShadowFactor(localSkyLightDirection, shadowFade, sss));
-        #endif
-    #endif
+    //     #ifdef SHADOW_COLORED
+    //         shadowColor = GetFinalShadowColor(localSkyLightDirection, shadowFade, sss);
+    //     #else
+    //         shadowColor = vec3(GetFinalShadowFactor(localSkyLightDirection, shadowFade, sss));
+    //     #endif
+    // #endif
 
     float fogF = 0.0;
     #ifdef SKY_BORDER_FOG_ENABLED
@@ -377,7 +377,7 @@ void main() {
 
         //     #if LIGHTING_MODE == LIGHTING_MODE_TRACED
         //         GetFinalBlockLighting(diffuseFinal, specularFinal, vIn.localPos, normal, normal, albedo.rgb, lmcoord, roughL, metal_f0, occlusion, sss);
-        //         GetSkyLightingFinal(diffuseFinal, specularFinal, shadowColor, vIn.localPos, normal, normal, albedo.rgb, lmcoord, roughL, metal_f0, occlusion, sss, false);
+        //         GetSkyLightingFinal(diffuseFinal, specularFinal, shadowColor, vIn.localPos, normal, normal, albedo.rgb, lmcoord, roughL, metal_f0, occlusion, sss, false, false);
         //     #elif LIGHTING_MODE == LIGHTING_MODE_FLOODFILL
         //         GetFloodfillLighting(diffuseFinal, specularFinal, vIn.localPos, normal, normal, lmcoord, shadowColor, albedo.rgb, metal_f0, roughL, occlusion, sss, false);
         //     #endif
@@ -429,9 +429,9 @@ void main() {
 
         #if SKY_VOL_FOG_TYPE != VOL_TYPE_NONE
             #if SKY_CLOUD_TYPE > CLOUDS_VANILLA
-                float weatherF = 1.0 - 0.5 * _pow2(skyRainStrength);
+                float weatherF = 1.0 - 0.5 * _pow2(weatherStrength);
             #else
-                float weatherF = 1.0 - 0.8 * _pow2(skyRainStrength);
+                float weatherF = 1.0 - 0.8 * _pow2(weatherStrength);
             #endif
         
             vec3 skyLightColor = WorldSkyLightColor * weatherF * VolumetricBrightnessSky;

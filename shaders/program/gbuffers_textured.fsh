@@ -13,11 +13,7 @@ in VertexData {
     vec3 localPos;
     vec3 localNormal;
 
-    // #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-    //     vec3 cloudPos;
-    // #endif
-
-    #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+    #ifdef RENDER_SHADOWS_ENABLED
         #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
             vec3 shadowPos[4];
             flat int shadowTile;
@@ -53,7 +49,7 @@ uniform sampler2D lightmap;
     #endif
 #endif
 
-#ifdef WORLD_SHADOW_ENABLED
+#ifdef RENDER_SHADOWS_ENABLED
     uniform sampler2D shadowtex0;
     uniform sampler2D shadowtex1;
 
@@ -101,7 +97,7 @@ uniform ivec2 eyeBrightnessSmooth;
     uniform vec3 sunPosition;
     uniform vec3 shadowLightPosition;
     uniform float rainStrength;
-    uniform float skyRainStrength;
+    uniform float weatherStrength;
     
     #ifdef IS_IRIS
         uniform float lightningStrength;
@@ -110,7 +106,7 @@ uniform ivec2 eyeBrightnessSmooth;
     #endif
 #endif
 
-#if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+#ifdef RENDER_SHADOWS_ENABLED
     // uniform vec3 shadowLightPosition;
 
     #if SHADOW_TYPE != SHADOW_TYPE_NONE
@@ -224,7 +220,7 @@ uniform ivec2 eyeBrightnessSmooth;
     #endif
 #endif
 
-#if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+#ifdef RENDER_SHADOWS_ENABLED
     #include "/lib/buffers/shadow.glsl"
 
     #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
@@ -351,7 +347,7 @@ void main() {
         roughL = _pow2(roughness);
     #endif
 
-    #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+    #ifdef RENDER_SHADOWS_ENABLED
         #ifndef IRIS_FEATURE_SSBO
             vec3 localSkyLightDirection = mat3(gbufferModelViewInverse) * normalize(shadowLightPosition);
         #endif
@@ -374,7 +370,9 @@ void main() {
         #endif
 
         #ifdef WORLD_SKY_ENABLED
-            GetSkyLightingFinal(skyDiffuse, skySpecular, shadowColor, vIn.localPos, normal, normal, albedo, vIn.lmcoord, roughL, metal_f0, occlusion, sss, false);
+            const bool tir = false;
+            const bool isUnderWater = false;
+            GetSkyLightingFinal(skyDiffuse, skySpecular, shadowColor, vIn.localPos, normal, normal, albedo, vIn.lmcoord, roughL, metal_f0, occlusion, sss, isUnderWater, tir);
         #endif
 
         vec3 diffuseFinal = blockDiffuse + skyDiffuse;
@@ -408,11 +406,12 @@ void main() {
         color.rgb = GetFinalLighting(albedo, diffuseFinal, specularFinal, occlusion);
     #else
         vec3 diffuse, specular = vec3(0.0);
-        GetVanillaLighting(diffuse, vIn.lmcoord, occlusion);
+        GetVanillaLighting(diffuse, vIn.lmcoord, shadowColor, occlusion);
 
         #if defined WORLD_SKY_ENABLED && LIGHTING_MODE != LIGHTING_MODE_NONE
-            const bool tir = false; // TODO: ?
-            GetSkyLightingFinal(diffuse, specular, shadowColor, vIn.localPos, normal, normal, albedo, vIn.lmcoord, roughL, metal_f0, occlusion, sss, tir);
+            const bool tir = false;
+            const bool isUnderWater = false;
+            GetSkyLightingFinal(diffuse, specular, shadowColor, vIn.localPos, normal, normal, albedo, vIn.lmcoord, roughL, metal_f0, occlusion, sss, isUnderWater, tir);
         #endif
 
         #if LIGHTING_MODE_HAND != HAND_LIGHT_NONE

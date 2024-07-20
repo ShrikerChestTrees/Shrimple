@@ -8,8 +8,7 @@ layout (vertices=3) out;
 #include "/lib/common.glsl"
 
 const float MIN_DISTANCE = 4;
-const float MAX_DISTANCE = 28;
-const int MAX_TESS_LEVEL = 16;
+const float MAX_DISTANCE = 40;
 
 in VertexData {
     vec4 color;
@@ -39,11 +38,7 @@ in VertexData {
         #endif
     #endif
 
-    // #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-    //     vec3 cloudPos;
-    // #endif
-
-    #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+    #if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
         #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
             vec3 shadowPos[4];
             flat int shadowTile;
@@ -81,11 +76,7 @@ out VertexData {
         #endif
     #endif
 
-    // #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-    //     vec3 cloudPos;
-    // #endif
-
-    #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+    #if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
         #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
             vec3 shadowPos[4];
             flat int shadowTile;
@@ -132,11 +123,7 @@ void main() {
         #endif
     #endif
 
-    // #ifdef RENDER_CLOUD_SHADOWS_ENABLED
-    //     vOut[gl_InvocationID].cloudPos = vIn[gl_InvocationID].cloudPos;
-    // #endif
-
-    #if defined WORLD_SHADOW_ENABLED && SHADOW_TYPE != SHADOW_TYPE_NONE
+    #if defined RENDER_SHADOWS_ENABLED && !defined DEFERRED_BUFFER_ENABLED
         #if SHADOW_TYPE == SHADOW_TYPE_CASCADED
             vOut[gl_InvocationID].shadowPos[0] = vIn[gl_InvocationID].shadowPos[0];
             vOut[gl_InvocationID].shadowPos[1] = vIn[gl_InvocationID].shadowPos[1];
@@ -157,7 +144,7 @@ void main() {
 
         #if defined WORLD_WATER_ENABLED && defined WATER_TESSELLATION_ENABLED
             if (vIn[0].blockId == BLOCK_WATER)
-                maxQuality = MAX_TESS_LEVEL;
+                maxQuality = WATER_TESSELLATION_QUALITY;
         #endif
 
         vec3 distances = GetPatchDistances(MIN_DISTANCE, MAX_DISTANCE);

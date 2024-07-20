@@ -1,4 +1,6 @@
 #version 430 compatibility
 
+#define RENDER_OPAQUE
+
 #include "end.glsl"
-#include "/program/deferred12.fsh"
+#include "/program/deferred_ssao.fsh"
